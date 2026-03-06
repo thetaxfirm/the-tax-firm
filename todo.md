@@ -38,3 +38,5 @@
 - [x] Test client portal end-to-end
 - [x] Add progress bar to document upload in client portal
 - [x] Add estimated time remaining to document upload
+- [x] Update headshot photo in About section with new image
+- [x] Add EA license number 131056 to About section

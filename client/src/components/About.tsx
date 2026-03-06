@@ -2,7 +2,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Quote } from "lucide-react";
 
-const ABOUT_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/about-section-fJd2xyarVD9oVw3sXr5f5M.webp";
+const ABOUT_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/christopher-craig-headshot_e35b9628.png";
 
 export default function About() {
   const ref = useRef(null);
@@ -25,7 +25,7 @@ export default function About() {
             <div className="relative rounded-sm overflow-hidden">
               <img
                 src={ABOUT_IMG}
-                alt="The Tax Firm office"
+                alt="Christopher Craig - Enrolled Agent"
                 className="w-full h-[400px] lg:h-[500px] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120]/40 to-transparent" />
@@ -82,6 +82,7 @@ export default function About() {
               <div>
                 <div className="text-white font-semibold">Christopher Craig</div>
                 <div className="text-[#D4A853] text-sm">Enrolled Agent<br />Licensed to Practice before the IRS</div>
+                <div className="text-[#E8E4DD]/40 text-xs mt-0.5">EA License #131056</div>
               </div>
             </div>
           </motion.div>
