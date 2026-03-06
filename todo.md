@@ -36,3 +36,5 @@
 - [x] Build client portal dashboard UI
 - [x] Integrate portal into navigation with login flow
 - [x] Test client portal end-to-end
+- [x] Add progress bar to document upload in client portal
+- [x] Add estimated time remaining to document upload
