@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
+import { useLocation } from "wouter";
 
 const navLinks = [
   { label: "Services", href: "#services" },
@@ -9,6 +10,7 @@ const navLinks = [
   { label: "About", href: "#about" },
   { label: "Testimonials", href: "#testimonials" },
   { label: "FAQ", href: "#faq" },
+  { label: "Blog", href: "/blog", isRoute: true },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -23,8 +25,24 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleNavClick = (href: string) => {
+  const [, navigate] = useLocation();
+
+  const handleNavClick = (href: string, isRoute?: boolean) => {
     setMobileOpen(false);
+    if (isRoute) {
+      navigate(href);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    // If we're not on the home page, navigate home first then scroll
+    if (window.location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        const el = document.querySelector(href);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+      return;
+    }
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
@@ -57,7 +75,7 @@ export default function Navbar() {
           {navLinks.map((link) => (
             <button
               key={link.href}
-              onClick={() => handleNavClick(link.href)}
+              onClick={() => handleNavClick(link.href, (link as any).isRoute)}
               className="text-sm text-[#E8E4DD]/70 hover:text-[#D4A853] transition-colors duration-300 tracking-wide"
             >
               {link.label}
@@ -100,7 +118,7 @@ export default function Navbar() {
               {navLinks.map((link) => (
                 <button
                   key={link.href}
-                  onClick={() => handleNavClick(link.href)}
+                  onClick={() => handleNavClick(link.href, (link as any).isRoute)}
                   className="text-left text-[#E8E4DD]/80 hover:text-[#D4A853] transition-colors py-2 text-lg tracking-wide"
                 >
                   {link.label}

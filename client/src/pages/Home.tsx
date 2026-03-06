@@ -9,6 +9,7 @@ import Process from "@/components/Process";
 import About from "@/components/About";
 import TaxCalculator from "@/components/TaxCalculator";
 import Testimonials from "@/components/Testimonials";
+import BlogPreview from "@/components/BlogPreview";
 import FAQ from "@/components/FAQ";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
@@ -27,6 +28,7 @@ export default function Home() {
       <About />
       <TaxCalculator />
       <Testimonials />
+      <BlogPreview />
       <FAQ />
       <Contact />
       <Footer />
