@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ArrowRight, BookOpen, Calculator, ClipboardCheck, Receipt, FileBarChart, ShieldCheck, CheckCircle2, Phone } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 const services = [
@@ -112,6 +113,10 @@ export default function Bookkeeping() {
 
   return (
     <div className="min-h-screen bg-[#0B1120]">
+      <SEOHead
+        title="Professional Bookkeeping Services"
+        description="Accurate, timely bookkeeping that keeps your finances organized and tax-ready. The Tax Firm offers full-service bookkeeping, accounts payable/receivable, bank reconciliation, payroll processing, and financial reporting."
+      />
       <Navbar />
 
       {/* Hero Section */}

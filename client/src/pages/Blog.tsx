@@ -10,6 +10,7 @@ import { ArrowRight, Clock, Search, ArrowLeft, BookOpen } from "lucide-react";
 import { blogPosts, categories } from "@/data/blogPosts";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 
 export default function Blog() {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -28,10 +29,15 @@ export default function Blog() {
   }, [activeCategory, searchQuery]);
 
   const featuredPost = blogPosts.find((p) => p.featured);
+
   const regularPosts = filteredPosts.filter((p) => !p.featured || activeCategory !== "All" || searchQuery !== "");
 
   return (
     <div className="min-h-screen bg-[#0B1120]">
+      <SEOHead
+        title="Blog & Resources"
+        description="Expert tax strategy insights, tips, and guides from The Tax Firm. Learn about S-Corp elections, Roth conversions, real estate tax strategies, asset protection, and more."
+      />
       <Navbar />
 
       {/* Hero Header */}

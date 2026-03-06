@@ -17,3 +17,9 @@
 - [x] Add prospect name as first question in questionnaire
 - [x] Add name column to questionnaire_responses database table
 - [x] Include name in admin notifications and admin dashboard
+- [x] Create reusable SEO/meta component for Open Graph tags
+- [x] Add OG tags to Home page
+- [x] Add OG tags to Blog listing page
+- [x] Add OG tags to individual Blog Article pages
+- [x] Add OG tags to Fractional CFO page
+- [x] Add OG tags to Bookkeeping page

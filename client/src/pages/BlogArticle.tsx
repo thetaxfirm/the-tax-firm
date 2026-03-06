@@ -19,6 +19,7 @@ import { blogPosts } from "@/data/blogPosts";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 
 /* Simple markdown-to-JSX renderer for article content */
 function renderMarkdown(content: string) {
@@ -173,6 +174,14 @@ export default function BlogArticle() {
 
   return (
     <div className="min-h-screen bg-[#0B1120]">
+      <SEOHead
+        title={post.title}
+        description={post.excerpt}
+        image={post.image}
+        type="article"
+        author={post.author}
+        publishedTime={post.date}
+      />
       <Navbar />
 
       {/* Article Header */}

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ArrowRight, TrendingUp, BarChart3, PieChart, DollarSign, FileText, Users, CheckCircle2, Phone } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 const benefits = [
@@ -83,6 +84,10 @@ export default function FractionalCFO() {
 
   return (
     <div className="min-h-screen bg-[#0B1120]">
+      <SEOHead
+        title="Fractional CFO Services"
+        description="Get executive-level financial leadership without the full-time cost. The Tax Firm's Fractional CFO services provide strategic financial planning, reporting, budgeting, and cash flow management for growing businesses."
+      />
       <Navbar />
 
       {/* Hero Section */}

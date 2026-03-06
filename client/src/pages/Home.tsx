@@ -1,3 +1,4 @@
+import SEOHead from "@/components/SEOHead";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import TrustStrip from "@/components/TrustStrip";
@@ -17,6 +18,10 @@ import Footer from "@/components/Footer";
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0B1120]">
+      <SEOHead
+        title="The Tax Firm"
+        description="The Tax Firm helps small business owners and high-income earners dramatically reduce their tax burden through proactive tax planning, asset protection, and wealth-building strategies."
+      />
       <Navbar />
       <Hero />
       <TrustStrip />
