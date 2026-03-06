@@ -68,7 +68,7 @@ export default function Hero() {
             className="flex flex-col sm:flex-row gap-4 mb-16"
           >
             <a
-              href="https://www.thetaxfirm.us"
+              href="https://calendly.com/chriscraig702"
               target="_blank"
               rel="noopener noreferrer"
               className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#D4A853] text-[#0B1120] font-semibold text-base rounded-sm hover:bg-[#F0D68A] transition-all duration-300"

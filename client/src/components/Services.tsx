@@ -136,7 +136,7 @@ export default function Services() {
                 </ul>
 
                 <a
-                  href="https://www.thetaxfirm.us"
+                  href="https://calendly.com/chriscraig702"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group inline-flex items-center gap-2 text-[#D4A853] font-medium text-sm hover:text-[#F0D68A] transition-colors"

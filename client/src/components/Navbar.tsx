@@ -69,7 +69,7 @@ export default function Navbar() {
             <Phone size={14} />
           </a>
           <a
-            href="https://www.thetaxfirm.us"
+            href="https://calendly.com/chriscraig702"
             target="_blank"
             rel="noopener noreferrer"
             className="px-6 py-2.5 bg-[#D4A853] text-[#0B1120] text-sm font-semibold rounded-sm hover:bg-[#F0D68A] transition-all duration-300 tracking-wide"
@@ -107,7 +107,7 @@ export default function Navbar() {
                 </button>
               ))}
               <a
-                href="https://www.thetaxfirm.us"
+                href="https://calendly.com/chriscraig702"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 px-6 py-3 bg-[#D4A853] text-[#0B1120] text-center font-semibold rounded-sm hover:bg-[#F0D68A] transition-all duration-300"

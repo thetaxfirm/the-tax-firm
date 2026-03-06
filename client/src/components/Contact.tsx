@@ -44,7 +44,7 @@ export default function Contact() {
             Schedule your free discovery call today and find out how much you could be saving with a proactive tax strategy.
           </p>
           <a
-            href="https://www.thetaxfirm.us"
+            href="https://calendly.com/chriscraig702"
             target="_blank"
             rel="noopener noreferrer"
             className="group inline-flex items-center gap-3 px-10 py-5 bg-[#D4A853] text-[#0B1120] font-semibold text-lg rounded-sm hover:bg-[#F0D68A] transition-all duration-300 shadow-lg shadow-[#D4A853]/20"
@@ -93,7 +93,7 @@ export default function Contact() {
             <h3 className="font-serif text-xl text-white mb-6">Get In Touch</h3>
             <div className="space-y-5">
               <a
-                href="https://www.thetaxfirm.us"
+                href="https://calendly.com/chriscraig702"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors group"
