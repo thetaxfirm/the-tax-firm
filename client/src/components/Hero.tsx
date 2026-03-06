@@ -113,7 +113,7 @@ export default function Hero() {
               <div className="flex items-center gap-1.5 mb-1">
                 <Landmark size={16} className="text-[#D4A853]" />
                 <span className="font-serif text-2xl sm:text-3xl text-white">
-                  <AnimatedCounter end={6} suffix="+" />
+                  <AnimatedCounter end={10} suffix="+" />
                 </span>
               </div>
               <span className="text-xs sm:text-sm text-[#E8E4DD]/50 tracking-wide">Years Experience</span>
