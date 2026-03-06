@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
+import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 const navLinks = [
   { label: "Services", href: "#services" },
@@ -14,6 +15,7 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { openQuestionnaire } = useQuestionnaire();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -68,14 +70,12 @@ export default function Navbar() {
           <a href="tel:+1" className="flex items-center gap-2 text-sm text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors">
             <Phone size={14} />
           </a>
-          <a
-            href="https://calendly.com/chriscraig702"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={openQuestionnaire}
             className="px-6 py-2.5 bg-[#D4A853] text-[#0B1120] text-sm font-semibold rounded-sm hover:bg-[#F0D68A] transition-all duration-300 tracking-wide"
           >
             Free Discovery Call
-          </a>
+          </button>
         </div>
 
         {/* Mobile Toggle */}
@@ -106,14 +106,15 @@ export default function Navbar() {
                   {link.label}
                 </button>
               ))}
-              <a
-                href="https://calendly.com/chriscraig702"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  openQuestionnaire();
+                }}
                 className="mt-4 px-6 py-3 bg-[#D4A853] text-[#0B1120] text-center font-semibold rounded-sm hover:bg-[#F0D68A] transition-all duration-300"
               >
                 Schedule a Free Discovery Call
-              </a>
+              </button>
             </div>
           </motion.div>
         )}

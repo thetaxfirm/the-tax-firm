@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Shield, TrendingUp, Landmark } from "lucide-react";
 import AnimatedCounter from "./AnimatedCounter";
+import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/hero-bg-m4FAsiLDeZrMUZXYYHAsDS.webp";
 
 export default function Hero() {
+  const { openQuestionnaire } = useQuestionnaire();
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Image */}
@@ -67,15 +70,13 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 mb-16"
           >
-            <a
-              href="https://calendly.com/chriscraig702"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={openQuestionnaire}
               className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#D4A853] text-[#0B1120] font-semibold text-base rounded-sm hover:bg-[#F0D68A] transition-all duration-300"
             >
               Schedule a Free Discovery Call
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </a>
+            </button>
             <a
               href="#services"
               className="inline-flex items-center justify-center gap-3 px-8 py-4 border border-[#D4A853]/30 text-[#D4A853] font-medium text-base rounded-sm hover:bg-[#D4A853]/10 hover:border-[#D4A853]/50 transition-all duration-300"

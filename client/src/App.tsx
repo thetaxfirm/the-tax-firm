@@ -4,6 +4,9 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { QuestionnaireProvider } from "./contexts/QuestionnaireContext";
+import Questionnaire from "./components/Questionnaire";
+import { useQuestionnaire } from "./contexts/QuestionnaireContext";
 import Home from "./pages/Home";
 
 function Router() {
@@ -16,14 +19,22 @@ function Router() {
   );
 }
 
+function QuestionnaireModal() {
+  const { isOpen, closeQuestionnaire } = useQuestionnaire();
+  return <Questionnaire isOpen={isOpen} onClose={closeQuestionnaire} />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <QuestionnaireProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            <QuestionnaireModal />
+          </TooltipProvider>
+        </QuestionnaireProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

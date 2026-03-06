@@ -2,11 +2,13 @@ import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { ArrowRight, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 export default function Contact() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [email, setEmail] = useState("");
+  const { openQuestionnaire } = useQuestionnaire();
 
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,15 +45,13 @@ export default function Contact() {
           <p className="text-lg text-[#E8E4DD]/60 max-w-2xl mx-auto mb-10">
             Schedule your free discovery call today and find out how much you could be saving with a proactive tax strategy.
           </p>
-          <a
-            href="https://calendly.com/chriscraig702"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={openQuestionnaire}
             className="group inline-flex items-center gap-3 px-10 py-5 bg-[#D4A853] text-[#0B1120] font-semibold text-lg rounded-sm hover:bg-[#F0D68A] transition-all duration-300 shadow-lg shadow-[#D4A853]/20"
           >
             Schedule a Free Discovery Call
             <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-          </a>
+          </button>
         </motion.div>
 
         {/* Newsletter + Contact Info */}
@@ -92,11 +92,9 @@ export default function Contact() {
           <div className="glass-card rounded-sm p-8">
             <h3 className="font-serif text-xl text-white mb-6">Get In Touch</h3>
             <div className="space-y-5">
-              <a
-                href="https://calendly.com/chriscraig702"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors group"
+              <button
+                onClick={openQuestionnaire}
+                className="flex items-center gap-4 text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors group w-full text-left"
               >
                 <div className="w-10 h-10 rounded-sm bg-[#D4A853]/10 border border-[#D4A853]/20 flex items-center justify-center group-hover:bg-[#D4A853]/20 transition-colors">
                   <Phone size={18} className="text-[#D4A853]" />
@@ -105,7 +103,7 @@ export default function Contact() {
                   <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">Phone</div>
                   <div className="text-sm">Schedule a Call Online</div>
                 </div>
-              </a>
+              </button>
               <a
                 href="mailto:chris@thetaxfirm.us"
                 className="flex items-center gap-4 text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors group"

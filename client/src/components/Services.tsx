@@ -1,6 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Shield, TrendingUp, Landmark, ArrowRight } from "lucide-react";
+import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 const ASSET_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/asset-protection-WqxTARzANJmhGLNfmhTFbQ.webp";
 const TAX_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/tax-strategy-5a3XruTc83nMgNePitc6yY.webp";
@@ -54,6 +55,7 @@ const services = [
 export default function Services() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { openQuestionnaire } = useQuestionnaire();
 
   return (
     <section id="services" className="relative py-24 sm:py-32 section-dark" ref={ref}>
@@ -135,15 +137,13 @@ export default function Services() {
                   ))}
                 </ul>
 
-                <a
-                  href="https://calendly.com/chriscraig702"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={openQuestionnaire}
                   className="group inline-flex items-center gap-2 text-[#D4A853] font-medium text-sm hover:text-[#F0D68A] transition-colors"
                 >
                   Learn More
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </a>
+                </button>
               </div>
             </motion.div>
           ))}

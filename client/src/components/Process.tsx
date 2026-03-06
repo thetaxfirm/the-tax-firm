@@ -1,6 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Search, FileText, Cog, BarChart3 } from "lucide-react";
+import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 const steps = [
   {
@@ -36,6 +37,7 @@ const steps = [
 export default function Process() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { openQuestionnaire } = useQuestionnaire();
 
   return (
     <section id="process" className="relative py-24 sm:py-32 overflow-hidden" ref={ref}>
@@ -106,14 +108,12 @@ export default function Process() {
           transition={{ duration: 0.7, delay: 0.8 }}
           className="text-center mt-16"
         >
-          <a
-            href="https://calendly.com/chriscraig702"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={openQuestionnaire}
             className="inline-flex items-center gap-3 px-8 py-4 bg-[#0B1120] text-[#D4A853] font-semibold text-base rounded-sm hover:bg-[#0F1729] transition-all duration-300 shadow-lg shadow-[#0B1120]/20"
           >
             Start Your Free Discovery Call
-          </a>
+          </button>
         </motion.div>
       </div>
     </section>
