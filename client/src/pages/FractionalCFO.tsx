@@ -3,6 +3,7 @@ import { ArrowRight, TrendingUp, BarChart3, PieChart, DollarSign, FileText, User
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import CFOCalculator from "@/components/CFOCalculator";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 const benefits = [
@@ -256,8 +257,11 @@ export default function FractionalCFO() {
         </div>
       </section>
 
+      {/* ROI Calculator */}
+      <CFOCalculator />
+
       {/* CTA */}
-      <section className="py-20 bg-[#0B1120]">
+      <section className="py-20 bg-[#0D1526]">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-serif text-3xl md:text-4xl text-white mb-6">
