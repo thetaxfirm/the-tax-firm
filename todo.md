@@ -28,3 +28,6 @@
 - [x] Integrate calculator into Fractional CFO page
 - [x] Build dynamic pricing calculator for Bookkeeping page
 - [x] Integrate calculator into Bookkeeping page
+- [x] Store GoHighLevel API key and Location ID as secrets
+- [x] Build GHL integration to create contacts on questionnaire submission
+- [x] Test GHL integration end-to-end

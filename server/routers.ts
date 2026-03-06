@@ -10,6 +10,7 @@ import {
   updateQuestionnaireResponseStatus,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+import { createGHLContact } from "./ghl";
 
 export const appRouter = router({
   system: systemRouter,
@@ -74,6 +75,29 @@ export const appRouter = router({
           });
         } catch (err) {
           console.warn("[Questionnaire] Failed to send owner notification:", err);
+        }
+
+        // Create contact in GoHighLevel CRM
+        try {
+          const ghlResult = await createGHLContact({
+            name: input.name,
+            email: input.email,
+            phone: input.phone,
+            selfEmployed: input.selfEmployed,
+            w2Employee: input.w2Employee,
+            annualIncome: input.annualIncome,
+            ownsRealEstate: input.ownsRealEstate,
+            rothConversionInterest: input.rothConversionInterest,
+            retirementSavings: input.retirementSavings,
+            expectations: input.expectations,
+          });
+          if (ghlResult.success) {
+            console.log(`[Questionnaire] GHL contact created: ${ghlResult.contactId}`);
+          } else {
+            console.warn(`[Questionnaire] GHL contact creation failed: ${ghlResult.error}`);
+          }
+        } catch (err) {
+          console.warn("[Questionnaire] Failed to create GHL contact:", err);
         }
 
         return result;
