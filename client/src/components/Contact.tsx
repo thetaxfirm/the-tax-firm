@@ -107,7 +107,7 @@ export default function Contact() {
                 </div>
               </a>
               <a
-                href="mailto:info@thetaxfirm.us"
+                href="mailto:chris@thetaxfirm.us"
                 className="flex items-center gap-4 text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors group"
               >
                 <div className="w-10 h-10 rounded-sm bg-[#D4A853]/10 border border-[#D4A853]/20 flex items-center justify-center group-hover:bg-[#D4A853]/20 transition-colors">
@@ -115,7 +115,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">Email</div>
-                  <div className="text-sm">info@thetaxfirm.us</div>
+                  <div className="text-sm">chris@thetaxfirm.us</div>
                 </div>
               </a>
               <div className="flex items-center gap-4 text-[#E8E4DD]/60">
