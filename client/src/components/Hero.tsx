@@ -95,7 +95,7 @@ export default function Hero() {
               <div className="flex items-center gap-1.5 mb-1">
                 <Shield size={16} className="text-[#D4A853]" />
                 <span className="font-serif text-2xl sm:text-3xl text-white">
-                  <AnimatedCounter end={328} suffix="+" />
+                  <AnimatedCounter end={450} suffix="+" />
                 </span>
               </div>
               <span className="text-xs sm:text-sm text-[#E8E4DD]/50 tracking-wide">Clients Served</span>
@@ -104,7 +104,7 @@ export default function Hero() {
               <div className="flex items-center gap-1.5 mb-1">
                 <TrendingUp size={16} className="text-[#D4A853]" />
                 <span className="font-serif text-2xl sm:text-3xl text-white">
-                  <AnimatedCounter end={26} suffix="%" />
+                  <AnimatedCounter end={30} suffix="%" />
                 </span>
               </div>
               <span className="text-xs sm:text-sm text-[#E8E4DD]/50 tracking-wide">Avg. Tax Savings</span>
