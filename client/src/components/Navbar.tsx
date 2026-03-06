@@ -66,7 +66,7 @@ export default function Navbar() {
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-lg text-white leading-tight tracking-wide">The Tax Firm</span>
-            <span className="text-[10px] uppercase tracking-[0.25em] text-[#D4A853]/70">Tax Strategy & Planning</span>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#D4A853]/70">Tax Strategy & Planning, Fractional CFO, Bookkeeping</span>
           </div>
         </a>
 
