@@ -20,12 +20,18 @@ type Answer = string | boolean | null;
 interface QuestionConfig {
   id: string;
   question: string;
-  type: "yesno" | "text" | "textarea" | "email" | "phone";
+  type: "yesno" | "text" | "textarea" | "email" | "phone" | "name";
   placeholder?: string;
   prefix?: string;
 }
 
 const questions: QuestionConfig[] = [
+  {
+    id: "name",
+    question: "What is your full name?",
+    type: "name",
+    placeholder: "John Smith",
+  },
   {
     id: "email",
     question: "What is your email address?",
@@ -121,6 +127,10 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
   const canProceed = () => {
     const answer = answers[current.id];
     if (current.type === "yesno") return answer === true || answer === false;
+    if (current.type === "name") {
+      const nameStr = String(answer || "").trim();
+      return nameStr.length >= 2;
+    }
     if (current.type === "email") {
       const emailStr = String(answer || "").trim();
       return emailStr.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
@@ -142,6 +152,7 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
     } else {
       // Submit answers to the database
       submitMutation.mutate({
+        name: String(answers["name"] || "").trim(),
         email: String(answers["email"] || "").trim(),
         phone: String(answers["phone"] || "").trim(),
         selfEmployed: answers["self_employed"] === true,
@@ -308,6 +319,19 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
                       >
                         No
                       </button>
+                    </div>
+                  )}
+
+                  {current.type === "name" && (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={String(answers[current.id] || "")}
+                        onChange={(e) => setAnswers((prev) => ({ ...prev, [current.id]: e.target.value }))}
+                        placeholder={current.placeholder}
+                        autoFocus
+                        className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
+                      />
                     </div>
                   )}
 

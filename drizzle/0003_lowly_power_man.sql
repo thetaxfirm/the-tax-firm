@@ -1,0 +1,1 @@
+ALTER TABLE `questionnaire_responses` ADD `name` varchar(200) NOT NULL;

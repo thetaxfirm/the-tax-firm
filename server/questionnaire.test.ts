@@ -70,6 +70,7 @@ describe("questionnaire.submit", () => {
     // We're testing the input validation and procedure routing here.
     try {
       await caller.questionnaire.submit({
+        name: "John Smith",
         email: "test@example.com",
         phone: "(702) 555-1234",
         selfEmployed: true,
@@ -93,6 +94,7 @@ describe("questionnaire.submit", () => {
 
     await expect(
       caller.questionnaire.submit({
+        name: "John Smith",
         email: "test@example.com",
         phone: "(702) 555-1234",
         selfEmployed: true,
@@ -111,6 +113,7 @@ describe("questionnaire.submit", () => {
 
     await expect(
       caller.questionnaire.submit({
+        name: "John Smith",
         email: "test@example.com",
         phone: "(702) 555-1234",
         selfEmployed: false,
@@ -129,6 +132,7 @@ describe("questionnaire.submit", () => {
 
     try {
       await caller.questionnaire.submit({
+        name: "Jane Doe",
         email: "test@example.com",
         phone: "(702) 555-1234",
         selfEmployed: false,
@@ -213,6 +217,7 @@ describe("questionnaire.submit email/phone validation", () => {
 
     await expect(
       caller.questionnaire.submit({
+        name: "John Smith",
         email: "not-an-email",
         phone: "(702) 555-1234",
         selfEmployed: true,
@@ -231,6 +236,7 @@ describe("questionnaire.submit email/phone validation", () => {
 
     await expect(
       caller.questionnaire.submit({
+        name: "John Smith",
         email: "test@example.com",
         phone: "",
         selfEmployed: true,
@@ -249,6 +255,44 @@ describe("questionnaire.submit email/phone validation", () => {
 
     await expect(
       caller.questionnaire.submit({
+        name: "John Smith",
+        phone: "(702) 555-1234",
+        selfEmployed: true,
+        w2Employee: false,
+        annualIncome: "350,000",
+        ownsRealEstate: false,
+        rothConversionInterest: false,
+        retirementSavings: "100,000",
+      } as any)
+    ).rejects.toThrow();
+  });
+
+  it("rejects submission with empty name", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.questionnaire.submit({
+        name: "",
+        email: "test@example.com",
+        phone: "(702) 555-1234",
+        selfEmployed: true,
+        w2Employee: false,
+        annualIncome: "350,000",
+        ownsRealEstate: false,
+        rothConversionInterest: false,
+        retirementSavings: "100,000",
+      })
+    ).rejects.toThrow();
+  });
+
+  it("rejects submission with missing name field", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.questionnaire.submit({
+        email: "test@example.com",
         phone: "(702) 555-1234",
         selfEmployed: true,
         w2Employee: false,

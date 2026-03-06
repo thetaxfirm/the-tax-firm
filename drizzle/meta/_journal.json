@@ -22,6 +22,13 @@
       "when": 1772813787197,
       "tag": "0002_moaning_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1772814128588,
+      "tag": "0003_lowly_power_man",
+      "breakpoints": true
     }
   ]
 }

@@ -14,3 +14,6 @@
 - [x] Update questionnaire submit API to accept and store email/phone
 - [x] Include email and phone in admin notification when questionnaire is submitted
 - [x] Update admin responses dashboard to display email and phone
+- [x] Add prospect name as first question in questionnaire
+- [x] Add name column to questionnaire_responses database table
+- [x] Include name in admin notifications and admin dashboard

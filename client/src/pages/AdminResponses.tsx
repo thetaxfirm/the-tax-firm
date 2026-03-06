@@ -244,6 +244,12 @@ export default function AdminResponses() {
                               </span>
                             </div>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                              {response.name && (
+                                <span className="flex items-center gap-1.5 text-white font-medium">
+                                  <User size={12} className="text-[#D4A853]/60" />
+                                  {response.name}
+                                </span>
+                              )}
                               {response.email && (
                                 <span className="flex items-center gap-1.5 text-[#E8E4DD]/60">
                                   <Mail size={12} className="text-[#D4A853]/60" />
@@ -331,6 +337,7 @@ export default function AdminResponses() {
 
                       {/* Detail Body */}
                       <div className="p-5 space-y-4">
+                        <DetailRow icon={User} label="Name" value={selectedResponse.name || "—"} highlight />
                         <DetailRow icon={Mail} label="Email" value={selectedResponse.email || "—"} highlight />
                         <DetailRow icon={Phone} label="Phone" value={selectedResponse.phone || "—"} highlight />
                         <div className="pt-3 border-t border-[#D4A853]/10" />

@@ -27,6 +27,7 @@ export const appRouter = router({
     submit: publicProcedure
       .input(
         z.object({
+          name: z.string().min(1),
           email: z.string().email(),
           phone: z.string().min(1),
           selfEmployed: z.boolean(),
@@ -40,6 +41,7 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         const result = await createQuestionnaireResponse({
+          name: input.name,
           email: input.email,
           phone: input.phone,
           selfEmployed: input.selfEmployed,
@@ -54,6 +56,7 @@ export const appRouter = router({
         // Send notification to owner about new questionnaire submission
         try {
           const details = [
+            `Name: ${input.name}`,
             `Email: ${input.email}`,
             `Phone: ${input.phone}`,
             `Self-Employed: ${input.selfEmployed ? "Yes" : "No"}`,
@@ -66,7 +69,7 @@ export const appRouter = router({
           ].filter(Boolean).join("\n");
 
           await notifyOwner({
-            title: `New Discovery Call Request — ${input.email} — Income: ${input.annualIncome}`,
+            title: `New Discovery Call Request — ${input.name} — Income: ${input.annualIncome}`,
             content: `A new prospect has completed the questionnaire and is booking a discovery call.\n\n${details}`,
           });
         } catch (err) {
