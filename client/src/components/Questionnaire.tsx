@@ -2,11 +2,11 @@
  * Design: Midnight Boardroom — Dark Luxury Advisory
  * Colors: #0B1120 (midnight), #D4A853 (gold), #E8E4DD (ivory text)
  * Fonts: DM Serif Display (headings), DM Sans (body)
- * This is a multi-step questionnaire modal that appears before booking a discovery call.
+ * Multi-step questionnaire modal with inline Calendly embed after completion.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowRight, ArrowLeft, X, CheckCircle2 } from "lucide-react";
 
 interface QuestionnaireProps {
@@ -19,7 +19,7 @@ type Answer = string | boolean | null;
 interface QuestionConfig {
   id: string;
   question: string;
-  type: "yesno" | "text";
+  type: "yesno" | "text" | "textarea";
   placeholder?: string;
   prefix?: string;
 }
@@ -59,22 +59,55 @@ const questions: QuestionConfig[] = [
     placeholder: "e.g. $500,000",
     prefix: "$",
   },
+  {
+    id: "expectations",
+    question: "If you were to hire my firm, what are your expectations and what would you want us to accomplish for you or your family?",
+    type: "textarea",
+    placeholder: "Tell us about your goals, expectations, and what you'd like us to help you achieve...",
+  },
 ];
+
+const CALENDLY_URL = "https://calendly.com/chriscraig702";
 
 export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [direction, setDirection] = useState(1);
   const [completed, setCompleted] = useState(false);
+  const calendlyContainerRef = useRef<HTMLDivElement>(null);
 
   const current = questions[currentStep];
   const totalSteps = questions.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
+  // Initialize Calendly inline widget when completed
+  useEffect(() => {
+    if (completed && calendlyContainerRef.current) {
+      // Clear any previous widget
+      calendlyContainerRef.current.innerHTML = "";
+
+      // Small delay to ensure DOM is ready and Calendly script is loaded
+      const timer = setTimeout(() => {
+        if (
+          calendlyContainerRef.current &&
+          (window as any).Calendly
+        ) {
+          (window as any).Calendly.initInlineWidget({
+            url: CALENDLY_URL + "?hide_gdpr_banner=1&background_color=0b1120&text_color=e8e4dd&primary_color=d4a853",
+            parentElement: calendlyContainerRef.current,
+          });
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [completed]);
+
   const canProceed = () => {
     const answer = answers[current.id];
     if (current.type === "yesno") return answer === true || answer === false;
-    if (current.type === "text") return answer && String(answer).trim().length > 0;
+    if (current.type === "text" || current.type === "textarea")
+      return answer && String(answer).trim().length > 0;
     return false;
   };
 
@@ -100,7 +133,6 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
   };
 
   const handleTextChange = (value: string) => {
-    // Strip non-numeric characters for formatting, but keep raw input
     const numericValue = value.replace(/[^0-9]/g, "");
     if (numericValue) {
       const formatted = Number(numericValue).toLocaleString("en-US");
@@ -110,10 +142,8 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
     }
   };
 
-  const handleBookCall = () => {
-    window.open("https://calendly.com/chriscraig702", "_blank");
-    handleReset();
-    onClose();
+  const handleTextareaChange = (value: string) => {
+    setAnswers((prev) => ({ ...prev, [current.id]: value }));
   };
 
   const handleReset = () => {
@@ -129,7 +159,8 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && canProceed()) {
+    // Don't submit on Enter for textarea (allow newlines)
+    if (e.key === "Enter" && current.type !== "textarea" && canProceed()) {
       handleNext();
     }
   };
@@ -162,13 +193,17 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
         onClick={handleClose}
       />
 
-      {/* Modal */}
+      {/* Modal — wider when showing Calendly */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.3 }}
-        className="relative w-full max-w-lg bg-[#0B1120] border border-[#D4A853]/20 rounded-sm shadow-2xl shadow-black/40 overflow-hidden"
+        className={`relative bg-[#0B1120] border border-[#D4A853]/20 rounded-sm shadow-2xl shadow-black/40 overflow-hidden transition-all duration-500 ${
+          completed
+            ? "w-full max-w-3xl max-h-[90vh]"
+            : "w-full max-w-lg"
+        }`}
         onKeyDown={handleKeyDown}
       >
         {/* Close button */}
@@ -191,142 +226,160 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
           </div>
         )}
 
-        <div className="p-8 sm:p-10">
-          {!completed ? (
-            <>
-              {/* Header */}
-              <div className="mb-2">
-                <span className="text-[#D4A853] text-xs uppercase tracking-[0.3em] font-medium">
-                  Question {currentStep + 1} of {totalSteps}
-                </span>
-              </div>
+        {!completed ? (
+          <div className="p-8 sm:p-10">
+            {/* Header */}
+            <div className="mb-2">
+              <span className="text-[#D4A853] text-xs uppercase tracking-[0.3em] font-medium">
+                Question {currentStep + 1} of {totalSteps}
+              </span>
+            </div>
 
-              {/* Question area */}
-              <div className="min-h-[200px] flex flex-col justify-center">
-                <AnimatePresence mode="wait" custom={direction}>
-                  <motion.div
-                    key={currentStep}
-                    custom={direction}
-                    variants={slideVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                  >
-                    <h3 className="font-serif text-2xl sm:text-3xl text-white leading-snug mb-8">
-                      {current.question}
-                    </h3>
-
-                    {current.type === "yesno" && (
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => handleYesNo(true)}
-                          className={`flex-1 py-4 rounded-sm text-base font-semibold transition-all duration-300 border ${
-                            answers[current.id] === true
-                              ? "bg-[#D4A853] text-[#0B1120] border-[#D4A853]"
-                              : "bg-transparent text-[#E8E4DD]/60 border-[#D4A853]/20 hover:border-[#D4A853]/50 hover:text-white"
-                          }`}
-                        >
-                          Yes
-                        </button>
-                        <button
-                          onClick={() => handleYesNo(false)}
-                          className={`flex-1 py-4 rounded-sm text-base font-semibold transition-all duration-300 border ${
-                            answers[current.id] === false
-                              ? "bg-[#D4A853] text-[#0B1120] border-[#D4A853]"
-                              : "bg-transparent text-[#E8E4DD]/60 border-[#D4A853]/20 hover:border-[#D4A853]/50 hover:text-white"
-                          }`}
-                        >
-                          No
-                        </button>
-                      </div>
-                    )}
-
-                    {current.type === "text" && (
-                      <div className="relative">
-                        {current.prefix && (
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4A853] text-lg font-medium">
-                            {current.prefix}
-                          </span>
-                        )}
-                        <input
-                          type="text"
-                          value={String(answers[current.id] || "")}
-                          onChange={(e) => handleTextChange(e.target.value)}
-                          placeholder={current.placeholder}
-                          autoFocus
-                          className={`w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 pr-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20 ${
-                            current.prefix ? "pl-10" : "pl-4"
-                          }`}
-                        />
-                      </div>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {/* Navigation */}
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-[#D4A853]/10">
-                <button
-                  onClick={handleBack}
-                  disabled={currentStep === 0}
-                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                    currentStep === 0
-                      ? "text-[#E8E4DD]/20 cursor-not-allowed"
-                      : "text-[#E8E4DD]/60 hover:text-[#D4A853]"
-                  }`}
+            {/* Question area */}
+            <div className="min-h-[200px] flex flex-col justify-center">
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={currentStep}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <ArrowLeft size={16} />
-                  Back
-                </button>
+                  <h3 className="font-serif text-2xl sm:text-3xl text-white leading-snug mb-8">
+                    {current.question}
+                  </h3>
 
-                <button
-                  onClick={handleNext}
-                  disabled={!canProceed()}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm text-sm font-semibold transition-all duration-300 ${
-                    canProceed()
-                      ? "bg-[#D4A853] text-[#0B1120] hover:bg-[#F0D68A]"
-                      : "bg-[#D4A853]/20 text-[#D4A853]/40 cursor-not-allowed"
-                  }`}
-                >
-                  {currentStep === totalSteps - 1 ? "Complete" : "Next"}
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-            </>
-          ) : (
-            /* Completion screen */
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-center py-6"
-            >
-              <div className="w-16 h-16 rounded-full bg-[#D4A853]/10 border border-[#D4A853]/30 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 size={32} className="text-[#D4A853]" />
-              </div>
-              <h3 className="font-serif text-2xl sm:text-3xl text-white mb-3">
-                Thank You!
-              </h3>
-              <p className="text-[#E8E4DD]/60 mb-8 max-w-sm mx-auto">
-                Based on your answers, we'd love to discuss how we can help you save on taxes. Book your free discovery call now.
-              </p>
+                  {current.type === "yesno" && (
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => handleYesNo(true)}
+                        className={`flex-1 py-4 rounded-sm text-base font-semibold transition-all duration-300 border ${
+                          answers[current.id] === true
+                            ? "bg-[#D4A853] text-[#0B1120] border-[#D4A853]"
+                            : "bg-transparent text-[#E8E4DD]/60 border-[#D4A853]/20 hover:border-[#D4A853]/50 hover:text-white"
+                        }`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => handleYesNo(false)}
+                        className={`flex-1 py-4 rounded-sm text-base font-semibold transition-all duration-300 border ${
+                          answers[current.id] === false
+                            ? "bg-[#D4A853] text-[#0B1120] border-[#D4A853]"
+                            : "bg-transparent text-[#E8E4DD]/60 border-[#D4A853]/20 hover:border-[#D4A853]/50 hover:text-white"
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  )}
+
+                  {current.type === "text" && (
+                    <div className="relative">
+                      {current.prefix && (
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4A853] text-lg font-medium">
+                          {current.prefix}
+                        </span>
+                      )}
+                      <input
+                        type="text"
+                        value={String(answers[current.id] || "")}
+                        onChange={(e) => handleTextChange(e.target.value)}
+                        placeholder={current.placeholder}
+                        autoFocus
+                        className={`w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 pr-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20 ${
+                          current.prefix ? "pl-10" : "pl-4"
+                        }`}
+                      />
+                    </div>
+                  )}
+
+                  {current.type === "textarea" && (
+                    <div className="relative">
+                      <textarea
+                        value={String(answers[current.id] || "")}
+                        onChange={(e) => handleTextareaChange(e.target.value)}
+                        placeholder={current.placeholder}
+                        autoFocus
+                        rows={5}
+                        className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-base leading-relaxed focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20 resize-none"
+                      />
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between mt-6 pt-6 border-t border-[#D4A853]/10">
               <button
-                onClick={handleBookCall}
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-[#D4A853] text-[#0B1120] font-semibold text-base rounded-sm hover:bg-[#F0D68A] transition-all duration-300 w-full justify-center"
+                onClick={handleBack}
+                disabled={currentStep === 0}
+                className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                  currentStep === 0
+                    ? "text-[#E8E4DD]/20 cursor-not-allowed"
+                    : "text-[#E8E4DD]/60 hover:text-[#D4A853]"
+                }`}
               >
-                Book Your Free Discovery Call
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                <ArrowLeft size={16} />
+                Back
               </button>
+
+              <button
+                onClick={handleNext}
+                disabled={!canProceed()}
+                className={`flex items-center gap-2 px-6 py-3 rounded-sm text-sm font-semibold transition-all duration-300 ${
+                  canProceed()
+                    ? "bg-[#D4A853] text-[#0B1120] hover:bg-[#F0D68A]"
+                    : "bg-[#D4A853]/20 text-[#D4A853]/40 cursor-not-allowed"
+                }`}
+              >
+                {currentStep === totalSteps - 1 ? "Complete" : "Next"}
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Completion screen with inline Calendly */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col overflow-hidden"
+          >
+            {/* Header section */}
+            <div className="text-center px-8 pt-8 pb-4">
+              <div className="w-14 h-14 rounded-full bg-[#D4A853]/10 border border-[#D4A853]/30 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 size={28} className="text-[#D4A853]" />
+              </div>
+              <h3 className="font-serif text-2xl text-white mb-2">
+                You're All Set!
+              </h3>
+              <p className="text-[#E8E4DD]/50 text-sm max-w-md mx-auto">
+                Pick a time below that works for you and we'll discuss how to reduce your tax burden.
+              </p>
+            </div>
+
+            {/* Calendly inline embed */}
+            <div
+              ref={calendlyContainerRef}
+              className="w-full overflow-y-auto"
+              style={{ minHeight: "580px", height: "calc(90vh - 180px)" }}
+            />
+
+            {/* Maybe later link */}
+            <div className="text-center py-3 border-t border-[#D4A853]/10">
               <button
                 onClick={handleClose}
-                className="mt-4 text-sm text-[#E8E4DD]/40 hover:text-[#D4A853] transition-colors"
+                className="text-xs text-[#E8E4DD]/30 hover:text-[#D4A853] transition-colors"
               >
                 Maybe later
               </button>
-            </motion.div>
-          )}
-        </div>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
