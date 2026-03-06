@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, Calculator, ClipboardCheck, Receipt, FileBarChart
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import BookkeepingCalculator from "@/components/BookkeepingCalculator";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
 const services = [
@@ -257,6 +258,9 @@ export default function Bookkeeping() {
           </div>
         </div>
       </section>
+
+      {/* Pricing Calculator */}
+      <BookkeepingCalculator />
 
       {/* Why Us */}
       <section className="py-20 bg-[#0D1526]">

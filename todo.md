@@ -26,3 +26,5 @@
 - [x] Add CSV export button to admin responses dashboard
 - [x] Build interactive ROI calculator for Fractional CFO page
 - [x] Integrate calculator into Fractional CFO page
+- [x] Build dynamic pricing calculator for Bookkeeping page
+- [x] Integrate calculator into Bookkeeping page
