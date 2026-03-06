@@ -8,6 +8,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, ArrowLeft, X, CheckCircle2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 interface QuestionnaireProps {
   isOpen: boolean;
@@ -80,6 +81,8 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
   const totalSteps = questions.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
+  const submitMutation = trpc.questionnaire.submit.useMutation();
+
   // Initialize Calendly inline widget when completed
   useEffect(() => {
     if (completed && calendlyContainerRef.current) {
@@ -117,6 +120,16 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
       setDirection(1);
       setCurrentStep((prev) => prev + 1);
     } else {
+      // Submit answers to the database
+      submitMutation.mutate({
+        selfEmployed: answers["self_employed"] === true,
+        w2Employee: answers["w2_employee"] === true,
+        annualIncome: String(answers["annual_income"] || ""),
+        ownsRealEstate: answers["own_real_estate"] === true,
+        rothConversionInterest: answers["roth_conversion"] === true,
+        retirementSavings: String(answers["pretax_retirement"] || ""),
+        expectations: answers["expectations"] ? String(answers["expectations"]) : undefined,
+      });
       setCompleted(true);
     }
   };

@@ -1,0 +1,5 @@
+- [x] Upgrade to full-stack with database and user management
+- [x] Create questionnaire_responses database table
+- [x] Add tRPC API endpoints for questionnaire submission and admin review
+- [x] Update Questionnaire component to save responses to database
+- [x] Build admin dashboard page for reviewing questionnaire responses

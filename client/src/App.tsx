@@ -10,13 +10,15 @@ import { useQuestionnaire } from "./contexts/QuestionnaireContext";
 import Home from "./pages/Home";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
-
+import AdminResponses from "./pages/AdminResponses";
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/blog"} component={Blog} />
       <Route path={"/blog/:slug"} component={BlogArticle} />
+      <Route path={"/admin/responses"} component={AdminResponses} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

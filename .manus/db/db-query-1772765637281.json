@@ -1,0 +1,49 @@
+{
+  "query": "SELECT * FROM questionnaire_responses ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2GEnzuaCtXYtB3B.3c027ce6df95 --database Y32hsJjLXpzLmBqnXDKJc5 --execute SELECT * FROM questionnaire_responses ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "3",
+      "selfEmployed": "1",
+      "w2Employee": "0",
+      "annualIncome": "400,000",
+      "ownsRealEstate": "1",
+      "rothConversionInterest": "1",
+      "retirementSavings": "750,000",
+      "expectations": "I want to reduce my tax burden significantly and protect my real estate investments. Looking for a long-term strategic partner.",
+      "status": "new",
+      "notes": "NULL",
+      "submittedAt": "2026-03-06 02:53:41"
+    },
+    {
+      "id": "2",
+      "selfEmployed": "0",
+      "w2Employee": "1",
+      "annualIncome": "150,000",
+      "ownsRealEstate": "0",
+      "rothConversionInterest": "1",
+      "retirementSavings": "250,000",
+      "expectations": "NULL",
+      "status": "new",
+      "notes": "NULL",
+      "submittedAt": "2026-03-06 02:49:43"
+    },
+    {
+      "id": "1",
+      "selfEmployed": "1",
+      "w2Employee": "0",
+      "annualIncome": "350,000",
+      "ownsRealEstate": "1",
+      "rothConversionInterest": "1",
+      "retirementSavings": "500,000",
+      "expectations": "I want to reduce my tax burden significantly.",
+      "status": "new",
+      "notes": "NULL",
+      "submittedAt": "2026-03-06 02:49:43"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tselfEmployed\tw2Employee\tannualIncome\townsRealEstate\trothConversionInterest\tretirementSavings\texpectations\tstatus\tnotes\tsubmittedAt\n3\t1\t0\t400,000\t1\t1\t750,000\tI want to reduce my tax burden significantly and protect my real estate investments. Looking for a long-term strategic partner.\tnew\tNULL\t2026-03-06 02:53:41\n2\t0\t1\t150,000\t0\t1\t250,000\tNULL\tnew\tNULL\t2026-03-06 02:49:43\n1\t1\t0\t350,000\t1\t1\t500,000\tI want to reduce my tax burden significantly.\tnew\tNULL\t2026-03-06 02:49:43\n",
+  "stderr": "",
+  "execution_time_ms": 411
+}
