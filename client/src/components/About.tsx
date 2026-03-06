@@ -81,7 +81,7 @@ export default function About() {
               <div className="w-12 h-px bg-[#D4A853]" />
               <div>
                 <div className="text-white font-semibold">Christopher Craig</div>
-                <div className="text-[#D4A853] text-sm">Founder & Lead Tax Strategist</div>
+                <div className="text-[#D4A853] text-sm">Enrolled Agent<br />Licensed to Practice before the IRS</div>
               </div>
             </div>
           </motion.div>
