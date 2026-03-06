@@ -18,6 +18,7 @@ import {
   DollarSign,
   Home,
   RefreshCw,
+  Download,
   Building2,
   Briefcase,
   PiggyBank,
@@ -123,6 +124,64 @@ export default function AdminResponses() {
     setEditingNotes(null);
   };
 
+  const handleExportCSV = () => {
+    if (!responses || responses.length === 0) return;
+
+    const headers = [
+      "ID",
+      "Name",
+      "Email",
+      "Phone",
+      "Self Employed",
+      "W2 Employee",
+      "Annual Income",
+      "Owns Real Estate",
+      "Interested in Roth Conversion",
+      "Retirement Savings",
+      "Expectations",
+      "Status",
+      "Notes",
+      "Submitted At",
+    ];
+
+    const escapeCSV = (value: string | null | undefined): string => {
+      if (value == null) return "";
+      const str = String(value);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = responses.map((r) => [
+      r.id,
+      escapeCSV(r.name),
+      escapeCSV(r.email),
+      escapeCSV(r.phone),
+      r.selfEmployed ? "Yes" : "No",
+      r.w2Employee ? "Yes" : "No",
+      escapeCSV(r.annualIncome),
+      r.ownsRealEstate ? "Yes" : "No",
+      r.rothConversionInterest ? "Yes" : "No",
+      escapeCSV(r.retirementSavings),
+      escapeCSV(r.expectations),
+      r.status,
+      escapeCSV(r.notes),
+      new Date(r.submittedAt).toLocaleString("en-US"),
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `tax-firm-responses-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const counts = {
     all: responses?.length ?? 0,
     new: responses?.filter((r) => r.status === "new").length ?? 0,
@@ -153,13 +212,23 @@ export default function AdminResponses() {
                 Review prospect questionnaire submissions before your discovery calls.
               </p>
             </div>
-            <button
-              onClick={() => refetch()}
-              className="flex items-center gap-2 px-4 py-2 border border-[#D4A853]/20 text-[#D4A853] text-sm rounded-sm hover:bg-[#D4A853]/10 transition-all"
-            >
-              <RefreshCw size={14} />
-              Refresh
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleExportCSV}
+                disabled={!responses || responses.length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-[#D4A853] text-[#0B1120] text-sm font-semibold rounded-sm hover:bg-[#F0D68A] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Download size={14} />
+                Export CSV
+              </button>
+              <button
+                onClick={() => refetch()}
+                className="flex items-center gap-2 px-4 py-2 border border-[#D4A853]/20 text-[#D4A853] text-sm rounded-sm hover:bg-[#D4A853]/10 transition-all"
+              >
+                <RefreshCw size={14} />
+                Refresh
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
