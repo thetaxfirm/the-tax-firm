@@ -69,6 +69,7 @@ export default function Footer() {
                 { label: "Our Process", href: "#process" },
                 { label: "Testimonials", href: "#testimonials" },
                 { label: "Blog & Resources", href: "/blog" },
+                { label: "Client Portal", href: "/portal" },
                 { label: "FAQ", href: "#faq" },
                 { label: "Contact", href: "#contact" },
               ].map((item) => (

@@ -1,6 +1,9 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertQuestionnaireResponse, users, questionnaireResponses } from "../drizzle/schema";
+import {
+  InsertUser, InsertQuestionnaireResponse, InsertEngagement, InsertDocument, InsertMessage,
+  users, questionnaireResponses, engagements, documents, messages
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -118,4 +121,95 @@ export async function updateQuestionnaireResponseStatus(id: number, status: "new
   if (notes !== undefined) updateData.notes = notes;
   await db.update(questionnaireResponses).set(updateData).where(eq(questionnaireResponses.id, id));
   return { success: true };
+}
+
+/* ── Engagements ─────────────────────────────────── */
+
+export async function createEngagement(data: InsertEngagement) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(engagements).values(data);
+  return { success: true, id: Number(result[0].insertId) };
+}
+
+export async function getEngagementsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(engagements).where(eq(engagements.userId, userId)).orderBy(desc(engagements.updatedAt));
+}
+
+export async function getAllEngagements() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(engagements).orderBy(desc(engagements.updatedAt));
+}
+
+export async function updateEngagement(id: number, data: Partial<InsertEngagement>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(engagements).set(data).where(eq(engagements.id, id));
+  return { success: true };
+}
+
+/* ── Documents ─────────────────────────────────── */
+
+export async function createDocument(data: InsertDocument) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(documents).values(data);
+  return { success: true, id: Number(result[0].insertId) };
+}
+
+export async function getDocumentsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(documents).where(eq(documents.userId, userId)).orderBy(desc(documents.createdAt));
+}
+
+export async function getAllDocuments() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(documents).orderBy(desc(documents.createdAt));
+}
+
+export async function deleteDocument(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(documents).where(eq(documents.id, id));
+  return { success: true };
+}
+
+/* ── Messages ─────────────────────────────────── */
+
+export async function createMessage(data: InsertMessage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(messages).values(data);
+  return { success: true, id: Number(result[0].insertId) };
+}
+
+export async function getMessagesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(messages).where(eq(messages.userId, userId)).orderBy(desc(messages.createdAt));
+}
+
+export async function getAllMessages() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(messages).orderBy(desc(messages.createdAt));
+}
+
+export async function markMessagesAsRead(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(messages).set({ isRead: true }).where(and(eq(messages.userId, userId), eq(messages.senderRole, "admin")));
+  return { success: true };
+}
+
+export async function getUnreadMessageCount(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(messages).where(and(eq(messages.userId, userId), eq(messages.senderRole, "admin"), eq(messages.isRead, false)));
+  return result.length;
 }

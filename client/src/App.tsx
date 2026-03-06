@@ -13,6 +13,9 @@ import BlogArticle from "./pages/BlogArticle";
 import AdminResponses from "./pages/AdminResponses";
 import FractionalCFO from "./pages/FractionalCFO";
 import Bookkeeping from "./pages/Bookkeeping";
+import Portal from "./pages/Portal";
+import AdminPortal from "./pages/AdminPortal";
+
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -22,7 +25,9 @@ function Router() {
       <Route path={"/blog/:slug"} component={BlogArticle} />
       <Route path={"/services/fractional-cfo"} component={FractionalCFO} />
       <Route path={"/services/bookkeeping"} component={Bookkeeping} />
+      <Route path={"/portal"} component={Portal} />
       <Route path={"/admin/responses"} component={AdminResponses} />
+      <Route path={"/admin/portal"} component={AdminPortal} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

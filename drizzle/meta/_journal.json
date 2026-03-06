@@ -29,6 +29,13 @@
       "when": 1772814128588,
       "tag": "0003_lowly_power_man",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1772839578021,
+      "tag": "0004_unusual_makkari",
+      "breakpoints": true
     }
   ]
 }

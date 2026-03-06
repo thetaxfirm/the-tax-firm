@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, Shield, User, LogOut } from "lucide-react";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 
 const navLinks = [
   { label: "Services", href: "#services" },
@@ -17,6 +19,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { openQuestionnaire } = useQuestionnaire();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -59,7 +62,7 @@ export default function Navbar() {
     >
       <div className="container flex items-center justify-between h-20">
         {/* Logo */}
-        <a href="#" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center gap-3 group">
+        <a href="#" onClick={() => { navigate("/"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-sm border border-[#D4A853]/60 flex items-center justify-center bg-[#D4A853]/10 group-hover:bg-[#D4A853]/20 transition-colors">
             <span className="font-serif text-[#D4A853] text-lg font-bold">T</span>
           </div>
@@ -88,6 +91,25 @@ export default function Navbar() {
             <Phone size={14} />
             <span>(702) 498-2144</span>
           </a>
+
+          {isAuthenticated ? (
+            <button
+              onClick={() => navigate("/portal")}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] text-sm font-semibold rounded-sm hover:bg-[#D4A853]/20 transition-all duration-300 tracking-wide"
+            >
+              <Shield size={14} />
+              Client Portal
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate("/portal")}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-[#E8E4DD]/50 hover:text-[#D4A853] transition-colors"
+            >
+              <User size={14} />
+              Sign In
+            </button>
+          )}
+
           <button
             onClick={openQuestionnaire}
             className="px-6 py-2.5 bg-[#D4A853] text-[#0B1120] text-sm font-semibold rounded-sm hover:bg-[#F0D68A] transition-all duration-300 tracking-wide"
@@ -124,6 +146,19 @@ export default function Navbar() {
                   {link.label}
                 </button>
               ))}
+
+              {/* Portal link in mobile menu */}
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate("/portal");
+                }}
+                className="text-left flex items-center gap-2 text-[#D4A853] py-2 text-lg tracking-wide"
+              >
+                <Shield size={18} />
+                {isAuthenticated ? "Client Portal" : "Sign In"}
+              </button>
+
               <button
                 onClick={() => {
                   setMobileOpen(false);

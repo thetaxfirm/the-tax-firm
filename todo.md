@@ -31,3 +31,8 @@
 - [x] Store GoHighLevel API key and Location ID as secrets
 - [x] Build GHL integration to create contacts on questionnaire submission
 - [x] Test GHL integration end-to-end
+- [x] Design database schema for client portal (documents, messages, engagements)
+- [x] Build backend API for document upload, messaging, and engagement tracking
+- [x] Build client portal dashboard UI
+- [x] Integrate portal into navigation with login flow
+- [x] Test client portal end-to-end
