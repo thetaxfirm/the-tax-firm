@@ -23,6 +23,8 @@ export type InsertUser = typeof users.$inferInsert;
  */
 export const questionnaireResponses = mysqlTable("questionnaire_responses", {
   id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  phone: varchar("phone", { length: 30 }).notNull(),
   selfEmployed: boolean("selfEmployed").notNull(),
   w2Employee: boolean("w2Employee").notNull(),
   annualIncome: varchar("annualIncome", { length: 100 }).notNull(),

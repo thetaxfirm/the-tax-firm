@@ -70,6 +70,8 @@ describe("questionnaire.submit", () => {
     // We're testing the input validation and procedure routing here.
     try {
       await caller.questionnaire.submit({
+        email: "test@example.com",
+        phone: "(702) 555-1234",
         selfEmployed: true,
         w2Employee: false,
         annualIncome: "350,000",
@@ -91,6 +93,8 @@ describe("questionnaire.submit", () => {
 
     await expect(
       caller.questionnaire.submit({
+        email: "test@example.com",
+        phone: "(702) 555-1234",
         selfEmployed: true,
         w2Employee: false,
         annualIncome: "",
@@ -107,6 +111,8 @@ describe("questionnaire.submit", () => {
 
     await expect(
       caller.questionnaire.submit({
+        email: "test@example.com",
+        phone: "(702) 555-1234",
         selfEmployed: false,
         w2Employee: true,
         annualIncome: "200,000",
@@ -123,6 +129,8 @@ describe("questionnaire.submit", () => {
 
     try {
       await caller.questionnaire.submit({
+        email: "test@example.com",
+        phone: "(702) 555-1234",
         selfEmployed: false,
         w2Employee: true,
         annualIncome: "150,000",
@@ -194,6 +202,61 @@ describe("questionnaire.updateStatus (admin-only)", () => {
 
     await expect(
       caller.questionnaire.updateStatus({ id: 1, status: "invalid" as any })
+    ).rejects.toThrow();
+  });
+});
+
+describe("questionnaire.submit email/phone validation", () => {
+  it("rejects submission with invalid email", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.questionnaire.submit({
+        email: "not-an-email",
+        phone: "(702) 555-1234",
+        selfEmployed: true,
+        w2Employee: false,
+        annualIncome: "350,000",
+        ownsRealEstate: false,
+        rothConversionInterest: false,
+        retirementSavings: "100,000",
+      })
+    ).rejects.toThrow();
+  });
+
+  it("rejects submission with empty phone", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.questionnaire.submit({
+        email: "test@example.com",
+        phone: "",
+        selfEmployed: true,
+        w2Employee: false,
+        annualIncome: "350,000",
+        ownsRealEstate: false,
+        rothConversionInterest: false,
+        retirementSavings: "100,000",
+      })
+    ).rejects.toThrow();
+  });
+
+  it("rejects submission with missing email field", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.questionnaire.submit({
+        phone: "(702) 555-1234",
+        selfEmployed: true,
+        w2Employee: false,
+        annualIncome: "350,000",
+        ownsRealEstate: false,
+        rothConversionInterest: false,
+        retirementSavings: "100,000",
+      } as any)
     ).rejects.toThrow();
   });
 });

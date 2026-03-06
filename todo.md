@@ -9,3 +9,8 @@
 - [x] Build dedicated Bookkeeping service page
 - [x] Set up email notifications for new questionnaire submissions
 - [x] Update navigation and routes for new service pages
+- [x] Add email and phone number fields to questionnaire UI
+- [x] Add email and phone columns to questionnaire_responses database table
+- [x] Update questionnaire submit API to accept and store email/phone
+- [x] Include email and phone in admin notification when questionnaire is submitted
+- [x] Update admin responses dashboard to display email and phone

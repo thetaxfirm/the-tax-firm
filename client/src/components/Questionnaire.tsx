@@ -20,12 +20,24 @@ type Answer = string | boolean | null;
 interface QuestionConfig {
   id: string;
   question: string;
-  type: "yesno" | "text" | "textarea";
+  type: "yesno" | "text" | "textarea" | "email" | "phone";
   placeholder?: string;
   prefix?: string;
 }
 
 const questions: QuestionConfig[] = [
+  {
+    id: "email",
+    question: "What is your email address?",
+    type: "email",
+    placeholder: "you@example.com",
+  },
+  {
+    id: "phone",
+    question: "What is your phone number?",
+    type: "phone",
+    placeholder: "(702) 555-1234",
+  },
   {
     id: "self_employed",
     question: "Are you self-employed?",
@@ -109,6 +121,14 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
   const canProceed = () => {
     const answer = answers[current.id];
     if (current.type === "yesno") return answer === true || answer === false;
+    if (current.type === "email") {
+      const emailStr = String(answer || "").trim();
+      return emailStr.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+    }
+    if (current.type === "phone") {
+      const phoneStr = String(answer || "").replace(/[^0-9]/g, "");
+      return phoneStr.length >= 7;
+    }
     if (current.type === "text" || current.type === "textarea")
       return answer && String(answer).trim().length > 0;
     return false;
@@ -122,6 +142,8 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
     } else {
       // Submit answers to the database
       submitMutation.mutate({
+        email: String(answers["email"] || "").trim(),
+        phone: String(answers["phone"] || "").trim(),
         selfEmployed: answers["self_employed"] === true,
         w2Employee: answers["w2_employee"] === true,
         annualIncome: String(answers["annual_income"] || ""),
@@ -286,6 +308,32 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
                       >
                         No
                       </button>
+                    </div>
+                  )}
+
+                  {current.type === "email" && (
+                    <div className="relative">
+                      <input
+                        type="email"
+                        value={String(answers[current.id] || "")}
+                        onChange={(e) => setAnswers((prev) => ({ ...prev, [current.id]: e.target.value }))}
+                        placeholder={current.placeholder}
+                        autoFocus
+                        className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
+                      />
+                    </div>
+                  )}
+
+                  {current.type === "phone" && (
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        value={String(answers[current.id] || "")}
+                        onChange={(e) => setAnswers((prev) => ({ ...prev, [current.id]: e.target.value }))}
+                        placeholder={current.placeholder}
+                        autoFocus
+                        className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
+                      />
                     </div>
                   )}
 

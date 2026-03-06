@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Clock,
   Phone,
+  Mail,
   User,
   DollarSign,
   Home,
@@ -243,6 +244,18 @@ export default function AdminResponses() {
                               </span>
                             </div>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                              {response.email && (
+                                <span className="flex items-center gap-1.5 text-[#E8E4DD]/60">
+                                  <Mail size={12} className="text-[#D4A853]/60" />
+                                  {response.email}
+                                </span>
+                              )}
+                              {response.phone && (
+                                <span className="flex items-center gap-1.5 text-[#E8E4DD]/60">
+                                  <Phone size={12} className="text-[#D4A853]/60" />
+                                  {response.phone}
+                                </span>
+                              )}
                               <span className="flex items-center gap-1.5 text-[#E8E4DD]/60">
                                 <DollarSign size={12} className="text-[#D4A853]/60" />
                                 ${response.annualIncome}
@@ -318,6 +331,9 @@ export default function AdminResponses() {
 
                       {/* Detail Body */}
                       <div className="p-5 space-y-4">
+                        <DetailRow icon={Mail} label="Email" value={selectedResponse.email || "—"} highlight />
+                        <DetailRow icon={Phone} label="Phone" value={selectedResponse.phone || "—"} highlight />
+                        <div className="pt-3 border-t border-[#D4A853]/10" />
                         <DetailRow icon={Briefcase} label="Self-Employed" value={selectedResponse.selfEmployed ? "Yes" : "No"} />
                         <DetailRow icon={Building2} label="W-2 Employee" value={selectedResponse.w2Employee ? "Yes" : "No"} />
                         <DetailRow icon={DollarSign} label="Annual Income" value={`$${selectedResponse.annualIncome}`} highlight />

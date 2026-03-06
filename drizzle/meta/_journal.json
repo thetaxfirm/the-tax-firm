@@ -15,6 +15,13 @@
       "when": 1772765135344,
       "tag": "0001_real_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772813787197,
+      "tag": "0002_moaning_warpath",
+      "breakpoints": true
     }
   ]
 }
