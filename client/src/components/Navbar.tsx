@@ -6,10 +6,9 @@ import { useLocation } from "wouter";
 
 const navLinks = [
   { label: "Services", href: "#services" },
-  { label: "Process", href: "#process" },
+  { label: "Fractional CFO", href: "/services/fractional-cfo", isRoute: true },
+  { label: "Bookkeeping", href: "/services/bookkeeping", isRoute: true },
   { label: "About", href: "#about" },
-  { label: "Testimonials", href: "#testimonials" },
-  { label: "FAQ", href: "#faq" },
   { label: "Blog", href: "/blog", isRoute: true },
   { label: "Contact", href: "#contact" },
 ];
@@ -85,8 +84,9 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-4">
-          <a href="tel:+1" className="flex items-center gap-2 text-sm text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors">
+          <a href="tel:+17024982144" className="flex items-center gap-2 text-sm text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors">
             <Phone size={14} />
+            <span>(702) 498-2144</span>
           </a>
           <button
             onClick={openQuestionnaire}

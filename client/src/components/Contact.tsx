@@ -92,8 +92,8 @@ export default function Contact() {
           <div className="glass-card rounded-sm p-8">
             <h3 className="font-serif text-xl text-white mb-6">Get In Touch</h3>
             <div className="space-y-5">
-              <button
-                onClick={openQuestionnaire}
+              <a
+                href="tel:+17024982144"
                 className="flex items-center gap-4 text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors group w-full text-left"
               >
                 <div className="w-10 h-10 rounded-sm bg-[#D4A853]/10 border border-[#D4A853]/20 flex items-center justify-center group-hover:bg-[#D4A853]/20 transition-colors">
@@ -101,9 +101,9 @@ export default function Contact() {
                 </div>
                 <div>
                   <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">Phone</div>
-                  <div className="text-sm">Schedule a Call Online</div>
+                  <div className="text-sm">(702) 498-2144</div>
                 </div>
-              </button>
+              </a>
               <a
                 href="mailto:chris@thetaxfirm.us"
                 className="flex items-center gap-4 text-[#E8E4DD]/60 hover:text-[#D4A853] transition-colors group"

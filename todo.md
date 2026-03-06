@@ -4,3 +4,8 @@
 - [x] Update Questionnaire component to save responses to database
 - [x] Build admin dashboard page for reviewing questionnaire responses
 - [x] Update navbar subtitle to include "Fractional CFO, Bookkeeping"
+- [x] Add phone number 702-498-2144 to navbar, contact section, and footer
+- [x] Build dedicated Fractional CFO service page
+- [x] Build dedicated Bookkeeping service page
+- [x] Set up email notifications for new questionnaire submissions
+- [x] Update navigation and routes for new service pages

@@ -9,6 +9,7 @@ import {
   getQuestionnaireResponseById,
   updateQuestionnaireResponseStatus,
 } from "./db";
+import { notifyOwner } from "./_core/notification";
 
 export const appRouter = router({
   system: systemRouter,
@@ -36,7 +37,7 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input }) => {
-        return createQuestionnaireResponse({
+        const result = await createQuestionnaireResponse({
           selfEmployed: input.selfEmployed,
           w2Employee: input.w2Employee,
           annualIncome: input.annualIncome,
@@ -45,6 +46,28 @@ export const appRouter = router({
           retirementSavings: input.retirementSavings,
           expectations: input.expectations ?? null,
         });
+
+        // Send notification to owner about new questionnaire submission
+        try {
+          const details = [
+            `Self-Employed: ${input.selfEmployed ? "Yes" : "No"}`,
+            `W-2 Employee: ${input.w2Employee ? "Yes" : "No"}`,
+            `Annual Income: ${input.annualIncome}`,
+            `Owns Real Estate: ${input.ownsRealEstate ? "Yes" : "No"}`,
+            `Roth Conversion Interest: ${input.rothConversionInterest ? "Yes" : "No"}`,
+            `Retirement Savings: ${input.retirementSavings}`,
+            input.expectations ? `Expectations: ${input.expectations}` : "",
+          ].filter(Boolean).join("\n");
+
+          await notifyOwner({
+            title: `New Discovery Call Request — Income: ${input.annualIncome}`,
+            content: `A new prospect has completed the questionnaire and is booking a discovery call.\n\n${details}`,
+          });
+        } catch (err) {
+          console.warn("[Questionnaire] Failed to send owner notification:", err);
+        }
+
+        return result;
       }),
 
     /** Admin: list all questionnaire responses */

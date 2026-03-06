@@ -1,3 +1,5 @@
+import { Phone, Mail } from "lucide-react";
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -14,13 +16,23 @@ export default function Footer() {
               <div className="flex flex-col">
                 <span className="font-serif text-lg text-white leading-tight">The Tax Firm</span>
                 <span className="text-[10px] uppercase tracking-[0.25em] text-[#D4A853]/70">
-                  Tax Strategy & Planning
+                  Tax Strategy & Planning, Fractional CFO, Bookkeeping
                 </span>
               </div>
             </div>
-            <p className="text-sm text-[#E8E4DD]/40 leading-relaxed max-w-xs">
+            <p className="text-sm text-[#E8E4DD]/40 leading-relaxed max-w-xs mb-4">
               Helping small business owners and high-income earners reduce taxes, protect assets, and build generational wealth.
             </p>
+            <div className="space-y-2">
+              <a href="tel:+17024982144" className="flex items-center gap-2 text-sm text-[#E8E4DD]/40 hover:text-[#D4A853] transition-colors">
+                <Phone size={14} className="text-[#D4A853]" />
+                <span>(702) 498-2144</span>
+              </a>
+              <a href="mailto:chris@thetaxfirm.us" className="flex items-center gap-2 text-sm text-[#E8E4DD]/40 hover:text-[#D4A853] transition-colors">
+                <Mail size={14} className="text-[#D4A853]" />
+                <span>chris@thetaxfirm.us</span>
+              </a>
+            </div>
           </div>
 
           {/* Services */}
@@ -29,15 +41,20 @@ export default function Footer() {
               Services
             </h4>
             <ul className="space-y-2.5">
-              {["Tax Mitigation", "Asset Protection", "Wealth Building", "Tax Planning", "Entity Structuring"].map(
-                (item) => (
-                  <li key={item}>
-                    <a href="#services" className="text-sm text-[#E8E4DD]/40 hover:text-[#D4A853] transition-colors">
-                      {item}
-                    </a>
-                  </li>
-                )
-              )}
+              {[
+                { label: "Tax Mitigation", href: "#services" },
+                { label: "Asset Protection", href: "#services" },
+                { label: "Wealth Building", href: "#services" },
+                { label: "Fractional CFO", href: "/services/fractional-cfo" },
+                { label: "Bookkeeping", href: "/services/bookkeeping" },
+                { label: "Entity Structuring", href: "#services" },
+              ].map((item) => (
+                <li key={item.label}>
+                  <a href={item.href} className="text-sm text-[#E8E4DD]/40 hover:text-[#D4A853] transition-colors">
+                    {item.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
