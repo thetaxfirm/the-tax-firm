@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { Quote } from "lucide-react";
 
 const ABOUT_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/christopher-craig-headshot_e35b9628.png";
+const EA_SEAL = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/irs-enrolled-agent-seal_a6193591.png";
 
 export default function About() {
   const ref = useRef(null);
@@ -85,6 +86,25 @@ export default function About() {
                 <div className="text-[#E8E4DD]/40 text-xs mt-0.5">EA License #131056</div>
               </div>
             </div>
+
+            {/* IRS Enrolled Agent Official Seal */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="mt-6 inline-flex items-center gap-3 bg-white/5 border border-[#D4A853]/15 rounded-sm px-5 py-3"
+            >
+              <img
+                src={EA_SEAL}
+                alt="IRS Enrolled Agent Official Seal"
+                className="h-10 w-auto"
+              />
+              <div className="h-8 w-px bg-[#D4A853]/20" />
+              <div>
+                <div className="text-[#E8E4DD]/60 text-[10px] uppercase tracking-[0.15em]">Federally Licensed</div>
+                <div className="text-white text-xs font-medium">IRS Enrolled Agent #131056</div>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>
