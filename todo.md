@@ -41,3 +41,5 @@
 - [x] Update headshot photo in About section with new image
 - [x] Add EA license number 131056 to About section
 - [x] Add official IRS Enrolled Agent seal next to license number in About section
+- [x] Add social media links (Facebook, LinkedIn, Instagram) to Footer
+- [x] Add social media links to About section

@@ -1,4 +1,4 @@
-import { Phone, Mail } from "lucide-react";
+import { Phone, Mail, Facebook, Linkedin, Instagram } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -107,6 +107,35 @@ export default function Footer() {
           <p className="text-xs text-[#E8E4DD]/30">
             {currentYear} &copy; The Tax Firm — All Rights Reserved
           </p>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://www.facebook.com/chriscraig702"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-sm border border-[#D4A853]/10 flex items-center justify-center text-[#E8E4DD]/30 hover:text-[#D4A853] hover:border-[#D4A853]/30 transition-all duration-300"
+              aria-label="Facebook"
+            >
+              <Facebook size={14} />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/christophercraigofficial"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-sm border border-[#D4A853]/10 flex items-center justify-center text-[#E8E4DD]/30 hover:text-[#D4A853] hover:border-[#D4A853]/30 transition-all duration-300"
+              aria-label="LinkedIn"
+            >
+              <Linkedin size={14} />
+            </a>
+            <a
+              href="https://www.instagram.com/christophercraigofficial"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-sm border border-[#D4A853]/10 flex items-center justify-center text-[#E8E4DD]/30 hover:text-[#D4A853] hover:border-[#D4A853]/30 transition-all duration-300"
+              aria-label="Instagram"
+            >
+              <Instagram size={14} />
+            </a>
+          </div>
           <p className="text-xs text-[#E8E4DD]/20">
             Tax planning services. Not legal or financial advice.
           </p>

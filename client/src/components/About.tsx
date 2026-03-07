@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Quote } from "lucide-react";
+import { Quote, Facebook, Linkedin, Instagram } from "lucide-react";
 
 const ABOUT_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/christopher-craig-headshot_e35b9628.png";
 const EA_SEAL = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/irs-enrolled-agent-seal_a6193591.png";
@@ -104,6 +104,43 @@ export default function About() {
                 <div className="text-[#E8E4DD]/60 text-[10px] uppercase tracking-[0.15em]">Federally Licensed</div>
                 <div className="text-white text-xs font-medium">IRS Enrolled Agent #131056</div>
               </div>
+            </motion.div>
+
+            {/* Social Media Links */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="mt-5 flex items-center gap-3"
+            >
+              <span className="text-[#E8E4DD]/30 text-xs uppercase tracking-wider mr-1">Connect</span>
+              <a
+                href="https://www.facebook.com/chriscraig702"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-sm border border-[#D4A853]/15 bg-white/5 flex items-center justify-center text-[#E8E4DD]/40 hover:text-[#D4A853] hover:border-[#D4A853]/40 hover:bg-[#D4A853]/5 transition-all duration-300"
+                aria-label="Facebook"
+              >
+                <Facebook size={16} />
+              </a>
+              <a
+                href="https://www.linkedin.com/in/christophercraigofficial"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-sm border border-[#D4A853]/15 bg-white/5 flex items-center justify-center text-[#E8E4DD]/40 hover:text-[#D4A853] hover:border-[#D4A853]/40 hover:bg-[#D4A853]/5 transition-all duration-300"
+                aria-label="LinkedIn"
+              >
+                <Linkedin size={16} />
+              </a>
+              <a
+                href="https://www.instagram.com/christophercraigofficial"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-sm border border-[#D4A853]/15 bg-white/5 flex items-center justify-center text-[#E8E4DD]/40 hover:text-[#D4A853] hover:border-[#D4A853]/40 hover:bg-[#D4A853]/5 transition-all duration-300"
+                aria-label="Instagram"
+              >
+                <Instagram size={16} />
+              </a>
             </motion.div>
           </motion.div>
         </div>
