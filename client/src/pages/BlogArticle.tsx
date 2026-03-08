@@ -50,12 +50,87 @@ function renderMarkdown(content: string) {
 
   const inlineFormat = (text: string): string => {
     return text
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-[#D4A853] hover:text-[#F0D68A] underline underline-offset-2 transition-colors" target="_blank" rel="noopener noreferrer">$1</a>')
       .replace(/\*\*(.+?)\*\*/g, '<strong class="text-[#E8E4DD]/90 font-semibold">$1</strong>')
       .replace(/\*(.+?)\*/g, "<em>$1</em>");
   };
 
+  const isTableRow = (line: string): boolean => {
+    return line.trim().startsWith("|") && line.trim().endsWith("|");
+  };
+
+  const isTableSeparator = (line: string): boolean => {
+    return /^\|[\s-:|]+\|$/.test(line.trim());
+  };
+
+  const parseTableCells = (line: string): string[] => {
+    return line
+      .trim()
+      .replace(/^\|/, "")
+      .replace(/\|$/, "")
+      .split("|")
+      .map((cell) => cell.trim());
+  };
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+
+    /* Table rendering */
+    if (isTableRow(line) && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+      flushList();
+      const headers = parseTableCells(line);
+      i++; // skip separator
+      const rows: string[][] = [];
+      while (i + 1 < lines.length && isTableRow(lines[i + 1])) {
+        i++;
+        rows.push(parseTableCells(lines[i]));
+      }
+      elements.push(
+        <div key={`table-${i}`} className="my-8 overflow-x-auto rounded-sm border border-[#D4A853]/15">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[#D4A853]/10 border-b border-[#D4A853]/20">
+                {headers.map((h, hi) => (
+                  <th
+                    key={hi}
+                    className="px-5 py-3 text-left text-xs uppercase tracking-wider text-[#D4A853] font-semibold"
+                    dangerouslySetInnerHTML={{ __html: inlineFormat(h) }}
+                  />
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, ri) => (
+                <tr
+                  key={ri}
+                  className={`border-b border-[#D4A853]/8 ${
+                    ri % 2 === 0 ? "bg-[#0F1729]/50" : "bg-[#0B1120]/50"
+                  }`}
+                >
+                  {row.map((cell, ci) => (
+                    <td
+                      key={ci}
+                      className="px-5 py-3 text-[#E8E4DD]/60"
+                      dangerouslySetInnerHTML={{ __html: inlineFormat(cell) }}
+                    />
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    /* Horizontal rule / divider */
+    if (line.trim() === "---") {
+      flushList();
+      elements.push(
+        <hr key={`hr-${i}`} className="my-10 border-t border-[#D4A853]/15" />
+      );
+      continue;
+    }
 
     if (line.startsWith("## ")) {
       flushList();

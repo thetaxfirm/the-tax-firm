@@ -682,4 +682,179 @@ Generational wealth isn't built by accident. It requires intentional, coordinate
 
 The families who build lasting wealth are the ones who treat tax planning not as an annual chore, but as an ongoing strategic advantage.`,
   },
+  {
+    slug: "arcade-game-strategy-roth-conversion-tax-free",
+    title: "The Arcade Game Strategy: How to Eliminate Ordinary Income Taxes on a Roth Conversion",
+    excerpt:
+      "Discover how commercial-grade arcade games and 100% bonus depreciation under IRC Section 168(k) can completely offset the tax on a Roth IRA conversion — turning a $294,000 tax bill into $0.",
+    category: "Tax Strategy",
+    readTime: "12 min read",
+    date: "March 8, 2026",
+    author: "Christopher Craig",
+    authorRole: "Enrolled Agent",
+    featured: false,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663030437321/Y32hsJjLXpzLmBqnXDKJc5/arcade-game-roth-conversion_16f07356.jpg",
+    content: `## The Problem: Roth Conversions Create a Massive Tax Bill
+
+A Roth conversion is one of the most powerful wealth-building tools in the tax code. By moving pre-tax retirement funds from a Traditional IRA into a Roth IRA, you unlock **tax-free growth and tax-free withdrawals** for the rest of your life — and for your heirs.
+
+But there's a catch. The converted amount is treated as **ordinary income** in the year of conversion. Convert $1,000,000 and you're looking at a federal tax bill of approximately **$294,062** (married filing jointly). That's enough to make most high-income earners think twice.
+
+What if there were a way to execute a Roth conversion and pay **zero federal tax** on it?
+
+That's exactly what the Arcade Game Strategy makes possible.
+
+## What Is the Arcade Game Strategy?
+
+The Arcade Game Strategy leverages **100% bonus depreciation** under IRC Section 168(k) — permanently restored by the One Big Beautiful Bill Act (OBBBA) of 2025 — to generate a first-year depreciation deduction large enough to completely offset the ordinary income created by a Roth conversion.
+
+Here's the core concept: you purchase commercial-grade arcade games through a legitimate trade or business, place them in service, and claim the **full purchase price as a depreciation deduction in Year 1**. That deduction offsets the Roth conversion income dollar-for-dollar.
+
+The result? A tax-free Roth conversion.
+
+## Why Arcade Games Qualify
+
+Not every asset qualifies for bonus depreciation. Arcade games check every box under the Internal Revenue Code:
+
+**Asset Classification:** Coin-operated amusement devices fall under **MACRS Asset Class 79.0 (Recreation)** per IRS Revenue Procedure 87-56. They carry a 7-year recovery period under the General Depreciation System (GDS) — well below the 20-year maximum required for qualified property.
+
+**Tangible Personal Property:** Arcade games are tangible personal property, a primary category eligible for bonus depreciation under Section 168(k).
+
+**100% Bonus Depreciation:** Under the OBBBA, property acquired and placed in service after January 19, 2025 qualifies for **permanent 100% bonus depreciation**. The entire purchase price is deductible in Year 1.
+
+| Requirement | Arcade Games |
+|---|---|
+| Tangible personal property | Yes |
+| MACRS recovery period ≤ 20 years | Yes (7 years) |
+| Placed in service after Jan 19, 2025 | Yes (OBBBA) |
+| Used in a trade or business | Yes (with documentation) |
+| Bonus depreciation rate | 100% (permanent) |
+
+## The Roth Conversion Scenario: $1M Tax-Free
+
+Let's walk through a concrete example based on the strategy outlined at [168kbonusdepreciation.com](https://www.168kbonusdepreciation.com).
+
+**The Setup:**
+- A taxpayer (married filing jointly) converts **$1,000,000** from a Traditional IRA to a Roth IRA in 2025
+- The taxpayer also operates a legitimate trade or business
+- The taxpayer purchases **10 commercial-grade arcade games at $100,000 each** — total investment of $1,000,000
+- Down payment: **10% ($100,000)** with the remaining 90% financed at 0% dealer financing
+- All games are placed in service after January 19, 2025
+
+**The Tax Math:**
+
+| Line Item | Without Arcade Strategy | With Arcade Strategy |
+|---|---|---|
+| Roth Conversion Income | $1,000,000 | $1,000,000 |
+| Bonus Depreciation (100%) | — | ($1,000,000) |
+| Adjusted Taxable Income | $1,000,000 | **$0** |
+| Federal Tax Owed (MFJ) | $294,062 | **$0** |
+
+The $1,000,000 bonus depreciation deduction **completely eliminates** the $294,062 federal tax liability on the Roth conversion.
+
+## The Financial Impact
+
+The numbers tell a compelling story:
+
+**Federal Tax Savings:** $294,062 — the entire tax bill on the conversion is eliminated.
+
+**Cash Outlay:** $100,000 — only the 10% down payment is required upfront. The full $1,000,000 purchase price qualifies for depreciation regardless of financing.
+
+**Net Federal Benefit:** $194,062 — the tax savings exceed the down payment by nearly $200,000.
+
+**ROI on Down Payment:** 294% — for every dollar invested in the down payment, the taxpayer receives $2.94 in tax savings.
+
+When you factor in state tax savings, the combined benefit is even more substantial:
+
+| State | State Tax Savings | Combined Federal + State |
+|---|---|---|
+| California (13.3%) | $133,000 | $427,062 |
+| New York (10.9%) | $109,000 | $403,062 |
+| Sample State (5%) | $50,000 | $344,062 |
+
+## Why This Matters for Your Retirement
+
+The real power of this strategy extends far beyond the Year 1 tax savings. Consider what happens to that $1,000,000 inside a Roth IRA:
+
+**Tax-Free Growth Forever:** Once the money is in the Roth, it grows completely tax-free. At a 7% annual return, $1,000,000 becomes approximately **$3.87 million over 20 years** — and not a single dollar of that growth will ever be taxed.
+
+**No Required Minimum Distributions:** Unlike a Traditional IRA, Roth IRAs have no RMDs during the owner's lifetime. Your money continues compounding tax-free for as long as you choose.
+
+**Tax-Free Inheritance:** Roth IRA assets pass to your heirs tax-free, making this a powerful generational wealth transfer tool.
+
+## The Arcade Games: A Revenue-Generating Asset
+
+This isn't just a tax play — the arcade games themselves are a legitimate business investment that generates ongoing income. Based on conservative revenue projections:
+
+| Metric | Per Game (Monthly) | 10 Games (Annual) |
+|---|---|---|
+| Gross Revenue | $5,000 | $600,000 |
+| Net Operating Income | $1,147 | $137,668 |
+
+The games generate revenue through coin or token operation in commercial locations such as restaurants, bars, entertainment venues, and waiting rooms. After accounting for customer payouts, venue operator revenue shares, software and maintenance costs, and debt service, the conservative net operating income is approximately **$137,668 per year** across a 10-game fleet.
+
+## Compliance: The Listed Property Rules
+
+Arcade games are classified as **"listed property"** under IRC Section 280F because they are generally used for entertainment, recreation, or amusement. This classification imposes two critical requirements:
+
+**1. Business Use Must Exceed 50%**
+
+The qualified business use of each arcade game must exceed 50% of its total use during the taxable year. If business use falls to 50% or below, only straight-line depreciation under the Alternative Depreciation System (ADS) is allowed — and previously claimed bonus depreciation may be subject to recapture.
+
+**2. Heightened Substantiation Requirements**
+
+Under IRC Section 274(d), taxpayers must maintain contemporaneous records documenting:
+- The date and duration of each business use
+- The specific business purpose for each use
+- Detailed logs of business vs. personal use hours
+- Revenue records (if coin/token operated)
+- Maintenance and repair records
+
+**Practical Example:** For an arcade game placed in a restaurant, the business use includes all hours the game is available to customers during business hours. For a game in an employee break room, its availability during work hours constitutes business use. The key is maintaining detailed, contemporaneous records from day one.
+
+## The Legal Foundation
+
+This strategy is built on well-established provisions of the Internal Revenue Code:
+
+- **IRC Section 168(k):** Authorizes bonus depreciation for qualified property
+- **One Big Beautiful Bill Act (OBBBA) of 2025:** Permanently restored 100% bonus depreciation for property acquired after January 19, 2025
+- **IRC Section 162:** Establishes the "ordinary and necessary" business expense standard
+- **IRC Section 280F:** Defines listed property rules and the >50% business use requirement
+- **IRC Section 274(d):** Sets substantiation requirements for listed property
+- **Rev. Proc. 87-56:** Classifies arcade games under Asset Class 79.0 (Recreation) with a 7-year MACRS recovery period
+
+## Who Should Consider This Strategy?
+
+The Arcade Game Strategy is particularly well-suited for:
+
+- **High-income earners** planning a large Roth conversion who want to eliminate the conversion tax
+- **Business owners** who can integrate arcade games into their existing operations (restaurants, entertainment venues, professional offices)
+- **Investors** looking for a tax-advantaged asset that generates ongoing passive income
+- **Anyone with significant ordinary income** seeking a legitimate first-year deduction to offset their tax liability
+
+## Important Disclaimers
+
+This strategy is powerful, but it requires careful implementation:
+
+1. **You must operate a legitimate trade or business** — hobby activities do not qualify
+2. **Business use must exceed 50%** every year to maintain the depreciation benefit
+3. **Contemporaneous records are mandatory** — the IRS requires detailed documentation for listed property
+4. **State tax treatment varies** — some states decouple from federal bonus depreciation provisions
+5. **Material participation requirements** may apply to offset Roth conversion income with business depreciation
+6. **Depreciation recapture** under IRC Section 1245 applies if you sell the games in a future year
+
+**This article is for informational purposes only and does not constitute tax advice.** The ability to offset Roth conversion income with business depreciation deductions depends on your specific circumstances. Always consult a qualified tax professional before implementing any tax strategy.
+
+## The Bottom Line
+
+The Arcade Game Strategy represents a powerful intersection of bonus depreciation, business investment, and retirement planning. By strategically timing the purchase of commercial-grade arcade games with a Roth conversion, you can potentially **eliminate hundreds of thousands of dollars in federal taxes** while simultaneously building a revenue-generating business asset and a tax-free retirement account.
+
+The $1,000,000 in your Roth IRA grows tax-free forever. The arcade games generate ongoing business income. And the $294,062 you would have paid in federal taxes stays in your pocket.
+
+That's not just tax planning — that's wealth building.
+
+---
+
+*Ready to explore whether the Arcade Game Strategy is right for your situation? [Schedule a free discovery call](/contact) to discuss your specific tax planning needs. For a comprehensive technical guide on arcade game bonus depreciation, visit [168kbonusdepreciation.com](https://www.168kbonusdepreciation.com).*`,
+  },
 ];

@@ -43,3 +43,4 @@
 - [x] Add official IRS Enrolled Agent seal next to license number in About section
 - [x] Add social media links (Facebook, LinkedIn, Instagram) to Footer
 - [x] Add social media links to About section
+- [x] Add blog article on eliminating ordinary income taxes on Roth Conversion using arcade game strategy
