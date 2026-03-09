@@ -44,3 +44,6 @@
 - [x] Add social media links (Facebook, LinkedIn, Instagram) to Footer
 - [x] Add social media links to About section
 - [x] Add blog article on eliminating ordinary income taxes on Roth Conversion using arcade game strategy
+- [x] Add blog article on cost segregation studies for real estate investors
+- [x] Add blog article on entity structuring for real estate investors
+- [x] Add blog article on the Augusta Rule (Section 280A(g))
