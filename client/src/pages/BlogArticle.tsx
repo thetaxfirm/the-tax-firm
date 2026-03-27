@@ -15,7 +15,8 @@ import {
   Share2,
   BookOpen,
 } from "lucide-react";
-import { blogPosts } from "@/data/blogPosts";
+import { blogPosts, type BlogPost } from "@/data/blogPosts";
+import { trpc } from "@/lib/trpc";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -182,14 +183,72 @@ export default function BlogArticle() {
   const [, navigate] = useLocation();
   const { openQuestionnaire } = useQuestionnaire();
 
-  const post = useMemo(
+  // Check static posts first, then fallback to database
+  const staticPost = useMemo(
     () => blogPosts.find((p) => p.slug === slug),
     [slug]
   );
 
+  const { data: dbArticle } = trpc.blog.bySlug.useQuery(
+    { slug: slug || "" },
+    { enabled: !staticPost && !!slug, staleTime: 60_000 }
+  );
+
+  const post: BlogPost | undefined = useMemo(() => {
+    if (staticPost) return staticPost;
+    if (dbArticle) {
+      return {
+        slug: dbArticle.slug,
+        title: dbArticle.title,
+        excerpt: dbArticle.excerpt,
+        category: dbArticle.category,
+        readTime: dbArticle.readTime,
+        date: new Date(dbArticle.publishedAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        author: dbArticle.author,
+        authorRole: dbArticle.authorRole,
+        featured: dbArticle.featured,
+        image: dbArticle.image,
+        content: dbArticle.content,
+      };
+    }
+    return undefined;
+  }, [staticPost, dbArticle]);
+
+  // Fetch all dynamic articles for related posts
+  const { data: allDynamic } = trpc.blog.published.useQuery(undefined, {
+    staleTime: 60_000,
+  });
+
+  const allPosts = useMemo(() => {
+    const dbPosts: BlogPost[] = (allDynamic || []).map((a) => ({
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt,
+      category: a.category,
+      readTime: a.readTime,
+      date: new Date(a.publishedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      author: a.author,
+      authorRole: a.authorRole,
+      featured: a.featured,
+      image: a.image,
+      content: a.content,
+    }));
+    const staticSlugs = new Set(blogPosts.map((p) => p.slug));
+    const uniqueDbPosts = dbPosts.filter((p) => !staticSlugs.has(p.slug));
+    return [...blogPosts, ...uniqueDbPosts];
+  }, [allDynamic]);
+
   const relatedPosts = useMemo(() => {
     if (!post) return [];
-    return blogPosts
+    return allPosts
       .filter((p) => p.slug !== post.slug)
       .filter(
         (p) =>
@@ -199,7 +258,7 @@ export default function BlogArticle() {
           )
       )
       .slice(0, 3);
-  }, [post, slug]);
+  }, [post, slug, allPosts]);
 
   if (!post) {
     return (

@@ -47,3 +47,8 @@
 - [x] Add blog article on cost segregation studies for real estate investors
 - [x] Add blog article on entity structuring for real estate investors
 - [x] Add blog article on the Augusta Rule (Section 280A(g))
+- [x] Create database table for blog articles (dynamic/API-published)
+- [x] Build secure REST API endpoint for external article publishing (API key auth)
+- [x] Build tRPC admin endpoints for managing API-published articles
+- [x] Update blog frontend to merge static and database articles
+- [x] Write tests for the blog API endpoint

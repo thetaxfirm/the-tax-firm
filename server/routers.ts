@@ -21,6 +21,11 @@ import {
   getAllMessages,
   markMessagesAsRead,
   getUnreadMessageCount,
+  getPublishedBlogArticles,
+  getAllBlogArticles,
+  getBlogArticleBySlug,
+  updateBlogArticle,
+  deleteBlogArticle,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { createGHLContact } from "./ghl";
@@ -355,6 +360,52 @@ export const appRouter = router({
     unreadCount: protectedProcedure.query(async ({ ctx }) => {
       return getUnreadMessageCount(ctx.user.id);
     }),
+  }),
+
+  blog: router({
+    /** Public: get all published dynamic articles */
+    published: publicProcedure.query(async () => {
+      return getPublishedBlogArticles();
+    }),
+
+    /** Public: get a single article by slug */
+    bySlug: publicProcedure
+      .input(z.object({ slug: z.string() }))
+      .query(async ({ input }) => {
+        return getBlogArticleBySlug(input.slug);
+      }),
+
+    /** Admin: get all articles including drafts */
+    all: adminProcedure.query(async () => {
+      return getAllBlogArticles();
+    }),
+
+    /** Admin: update article status or content */
+    update: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          title: z.string().optional(),
+          excerpt: z.string().optional(),
+          category: z.string().optional(),
+          content: z.string().optional(),
+          status: z.enum(["draft", "published", "archived"]).optional(),
+          featured: z.boolean().optional(),
+          image: z.string().optional(),
+          tags: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return updateBlogArticle(id, data);
+      }),
+
+    /** Admin: delete article */
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return deleteBlogArticle(input.id);
+      }),
   }),
 });
 

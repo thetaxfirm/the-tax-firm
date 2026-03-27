@@ -97,3 +97,33 @@ export const messages = mysqlTable("messages", {
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
+
+/**
+ * Blog articles — dynamically published via API (e.g., from Tely.ai or other content platforms).
+ * These supplement the static blogPosts defined in client/src/data/blogPosts.ts.
+ */
+export const blogArticles = mysqlTable("blog_articles", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 300 }).notNull().unique(),
+  title: varchar("title", { length: 500 }).notNull(),
+  excerpt: text("excerpt").notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  readTime: varchar("readTime", { length: 50 }).notNull(),
+  author: varchar("author", { length: 200 }).notNull(),
+  authorRole: varchar("authorRole", { length: 200 }).notNull(),
+  featured: boolean("featured").default(false).notNull(),
+  image: text("image").notNull(),
+  content: text("content").notNull(),
+  status: mysqlEnum("status", ["draft", "published", "archived"]).default("published").notNull(),
+  source: varchar("source", { length: 100 }).default("api"),
+  externalId: varchar("externalId", { length: 300 }),
+  metaTitle: varchar("metaTitle", { length: 500 }),
+  metaDescription: text("metaDescription"),
+  tags: text("tags"),
+  publishedAt: timestamp("publishedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BlogArticle = typeof blogArticles.$inferSelect;
+export type InsertBlogArticle = typeof blogArticles.$inferInsert;

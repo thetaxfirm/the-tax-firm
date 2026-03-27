@@ -7,7 +7,8 @@ import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Clock, Search, ArrowLeft, BookOpen } from "lucide-react";
-import { blogPosts, categories } from "@/data/blogPosts";
+import { blogPosts, categories, type BlogPost } from "@/data/blogPosts";
+import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -16,8 +17,47 @@ export default function Blog() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Fetch dynamic articles from database
+  const { data: dynamicArticles } = trpc.blog.published.useQuery(undefined, {
+    staleTime: 60_000,
+  });
+
+  // Merge static and dynamic articles, sorted by date (newest first)
+  const allPosts = useMemo(() => {
+    const dbPosts: BlogPost[] = (dynamicArticles || []).map((a) => ({
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt,
+      category: a.category,
+      readTime: a.readTime,
+      date: new Date(a.publishedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      author: a.author,
+      authorRole: a.authorRole,
+      featured: a.featured,
+      image: a.image,
+      content: a.content,
+    }));
+    // Merge, avoiding duplicate slugs (static takes precedence)
+    const staticSlugs = new Set(blogPosts.map((p) => p.slug));
+    const uniqueDbPosts = dbPosts.filter((p) => !staticSlugs.has(p.slug));
+    return [...blogPosts, ...uniqueDbPosts];
+  }, [dynamicArticles]);
+
+  // Merge dynamic categories
+  const allCategories = useMemo(() => {
+    const dynamicCats = (dynamicArticles || [])
+      .map((a) => a.category)
+      .filter((c) => !categories.includes(c));
+    const uniqueCats = Array.from(new Set(dynamicCats));
+    return [...categories, ...uniqueCats];
+  }, [dynamicArticles]);
+
   const filteredPosts = useMemo(() => {
-    return blogPosts.filter((post) => {
+    return allPosts.filter((post) => {
       const matchesCategory =
         activeCategory === "All" || post.category === activeCategory;
       const matchesSearch =
@@ -26,9 +66,9 @@ export default function Blog() {
         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, allPosts]);
 
-  const featuredPost = blogPosts.find((p) => p.featured);
+  const featuredPost = allPosts.find((p) => p.featured);
 
   const regularPosts = filteredPosts.filter((p) => !p.featured || activeCategory !== "All" || searchQuery !== "");
 
@@ -103,7 +143,7 @@ export default function Blog() {
 
           {/* Category Filters */}
           <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
+            {allCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}

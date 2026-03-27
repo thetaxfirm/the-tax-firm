@@ -6,11 +6,38 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight, Clock } from "lucide-react";
-import { blogPosts } from "@/data/blogPosts";
-
-const previewPosts = blogPosts.slice(0, 3);
+import { blogPosts, type BlogPost } from "@/data/blogPosts";
+import { trpc } from "@/lib/trpc";
+import { useMemo } from "react";
 
 export default function BlogPreview() {
+  const { data: dynamicArticles } = trpc.blog.published.useQuery(undefined, {
+    staleTime: 60_000,
+  });
+
+  const previewPosts = useMemo(() => {
+    const dbPosts: BlogPost[] = (dynamicArticles || []).map((a) => ({
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt,
+      category: a.category,
+      readTime: a.readTime,
+      date: new Date(a.publishedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      author: a.author,
+      authorRole: a.authorRole,
+      featured: a.featured,
+      image: a.image,
+      content: a.content,
+    }));
+    const staticSlugs = new Set(blogPosts.map((p) => p.slug));
+    const uniqueDbPosts = dbPosts.filter((p) => !staticSlugs.has(p.slug));
+    return [...blogPosts, ...uniqueDbPosts].slice(0, 3);
+  }, [dynamicArticles]);
+
   return (
     <section className="py-24 section-dark" id="resources">
       <div className="container">
