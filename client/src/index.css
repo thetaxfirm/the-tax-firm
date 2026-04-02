@@ -170,6 +170,99 @@
   }
 }
 
+/* Blog HTML content styling (for articles from Google Drive / API) */
+.blog-html-content h2 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  color: white;
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+}
+.blog-html-content h3 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.25rem;
+  color: #D4A853;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+.blog-html-content p {
+  color: rgba(232, 228, 221, 0.6);
+  line-height: 1.75;
+  margin-bottom: 1.25rem;
+}
+.blog-html-content a {
+  color: #D4A853;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+.blog-html-content a:hover {
+  color: #F0D68A;
+}
+.blog-html-content strong {
+  color: rgba(232, 228, 221, 0.9);
+  font-weight: 600;
+}
+.blog-html-content ul,
+.blog-html-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: rgba(232, 228, 221, 0.6);
+  line-height: 1.75;
+}
+.blog-html-content ul {
+  list-style-type: disc;
+}
+.blog-html-content ol {
+  list-style-type: decimal;
+}
+.blog-html-content li {
+  margin-bottom: 0.5rem;
+}
+.blog-html-content li:empty {
+  display: none;
+}
+.blog-html-content table {
+  width: 100%;
+  font-size: 0.875rem;
+  margin: 2rem 0;
+  border: 1px solid rgba(212, 168, 83, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.blog-html-content thead tr {
+  background: rgba(212, 168, 83, 0.1);
+  border-bottom: 1px solid rgba(212, 168, 83, 0.2);
+}
+.blog-html-content th {
+  padding: 0.75rem 1.25rem;
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #D4A853;
+  font-weight: 600;
+}
+.blog-html-content td {
+  padding: 0.75rem 1.25rem;
+  color: rgba(232, 228, 221, 0.6);
+  border-bottom: 1px solid rgba(212, 168, 83, 0.08);
+}
+.blog-html-content tbody tr:nth-child(even) {
+  background: rgba(15, 23, 41, 0.5);
+}
+.blog-html-content tbody tr:nth-child(odd) {
+  background: rgba(11, 17, 32, 0.5);
+}
+.blog-html-content blockquote {
+  border-left: 3px solid #D4A853;
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: rgba(232, 228, 221, 0.5);
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;

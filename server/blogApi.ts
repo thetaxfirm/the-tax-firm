@@ -175,12 +175,14 @@ blogApiRouter.get("/articles", async (req: Request, res: Response) => {
       const authHeader = req.headers.authorization;
       const token = authHeader?.replace("Bearer ", "");
       if (!apiKey || token !== apiKey) {
-        articles = await getPublishedBlogArticles();
+        const result = await getPublishedBlogArticles();
+        articles = result.items;
       } else {
         articles = await getAllBlogArticles();
       }
     } else {
-      articles = await getPublishedBlogArticles();
+      const result = await getPublishedBlogArticles();
+      articles = result.items;
     }
 
     res.json({

@@ -26,10 +26,19 @@ export default function SEOHead({
   useEffect(() => {
     const siteName = "The Tax Firm";
     const fullTitle = title === siteName ? title : `${title} | ${siteName}`;
-    const currentUrl = url || window.location.href;
+    const canonicalUrl = url || `https://thetaxfirm.us${window.location.pathname}`;
 
     // Update document title
     document.title = fullTitle;
+
+    // Canonical URL
+    let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonicalLink) {
+      canonicalLink = document.createElement("link");
+      canonicalLink.setAttribute("rel", "canonical");
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute("href", canonicalUrl);
 
     // Helper to set or create a meta tag
     const setMeta = (property: string, content: string, isName = false) => {
@@ -50,7 +59,7 @@ export default function SEOHead({
     setMeta("og:title", fullTitle);
     setMeta("og:description", description);
     setMeta("og:image", image);
-    setMeta("og:url", currentUrl);
+    setMeta("og:url", canonicalUrl);
     setMeta("og:type", type);
     setMeta("og:site_name", siteName);
 
@@ -66,9 +75,11 @@ export default function SEOHead({
       if (publishedTime) setMeta("article:published_time", publishedTime);
     }
 
-    // Cleanup: restore default title on unmount
+    // Cleanup on unmount
     return () => {
       document.title = "The Tax Firm | Advanced Tax Strategy & Planning";
+      const link = document.querySelector('link[rel="canonical"]');
+      if (link) link.remove();
     };
   }, [title, description, image, url, type, author, publishedTime]);
 

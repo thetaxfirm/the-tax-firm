@@ -1,60 +1,86 @@
 /*
  * Blog/Resources listing page for The Tax Firm.
  * Design: Midnight Boardroom dark luxury aesthetic with gold accents.
- * Features: Category filtering, featured article hero, grid layout, search.
+ * Features: Category filtering, featured article hero, grid layout, search, load more.
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Clock, Search, ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowRight, Clock, Search, ArrowLeft, BookOpen, Loader2 } from "lucide-react";
 import { blogPosts, categories, type BlogPost } from "@/data/blogPosts";
 import { trpc } from "@/lib/trpc";
+
+function stripHtmlExcerpt(content: string): string {
+  const text = content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const introIdx = text.indexOf("Introduction");
+  const start = introIdx !== -1 ? introIdx + "Introduction".length : 0;
+  const clean = text.slice(start).trim();
+  return clean.slice(0, 200) + "...";
+}
+
+function dbToPost(a: any): BlogPost {
+  return {
+    slug: a.slug,
+    title: a.title,
+    excerpt: /^\s*<[a-z]/i.test(a.excerpt) ? stripHtmlExcerpt(a.content) : a.excerpt,
+    category: a.category,
+    readTime: a.readTime,
+    date: new Date(a.publishedAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    author: a.author,
+    authorRole: a.authorRole,
+    featured: a.featured,
+    image: a.image,
+    content: a.content,
+  };
+}
+
+// Handle both old (array) and new ({ items, nextCursor }) response shapes
+function extractItems(data: any): any[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (data.items) return data.items;
+  return [];
+}
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 
+const PAGE_SIZE = 9;
+
 export default function Blog() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Fetch dynamic articles from database
-  const { data: dynamicArticles } = trpc.blog.published.useQuery(undefined, {
-    staleTime: 60_000,
-  });
+  // Fetch all dynamic articles from database
+  const { data: dynamicData, isLoading } = trpc.blog.published.useQuery(
+    { limit: 100 },
+    { staleTime: 60_000 }
+  );
 
-  // Merge static and dynamic articles, sorted by date (newest first)
+  // Merge static and dynamic articles
   const allPosts = useMemo(() => {
-    const dbPosts: BlogPost[] = (dynamicArticles || []).map((a) => ({
-      slug: a.slug,
-      title: a.title,
-      excerpt: a.excerpt,
-      category: a.category,
-      readTime: a.readTime,
-      date: new Date(a.publishedAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      author: a.author,
-      authorRole: a.authorRole,
-      featured: a.featured,
-      image: a.image,
-      content: a.content,
-    }));
-    // Merge, avoiding duplicate slugs (static takes precedence)
+    const rawItems = extractItems(dynamicData);
+    const dbPosts = rawItems.map(dbToPost);
     const staticSlugs = new Set(blogPosts.map((p) => p.slug));
     const uniqueDbPosts = dbPosts.filter((p) => !staticSlugs.has(p.slug));
     return [...blogPosts, ...uniqueDbPosts];
-  }, [dynamicArticles]);
+  }, [dynamicData]);
 
   // Merge dynamic categories
   const allCategories = useMemo(() => {
-    const dynamicCats = (dynamicArticles || [])
-      .map((a) => a.category)
-      .filter((c) => !categories.includes(c));
+    const rawItems = extractItems(dynamicData);
+    const dynamicCats = rawItems
+      .map((a: any) => a.category)
+      .filter((c: string) => !categories.includes(c));
     const uniqueCats = Array.from(new Set(dynamicCats));
     return [...categories, ...uniqueCats];
-  }, [dynamicArticles]);
+  }, [dynamicData]);
 
   const filteredPosts = useMemo(() => {
     return allPosts.filter((post) => {
@@ -71,6 +97,25 @@ export default function Blog() {
   const featuredPost = allPosts.find((p) => p.featured);
 
   const regularPosts = filteredPosts.filter((p) => !p.featured || activeCategory !== "All" || searchQuery !== "");
+
+  // Paginated slice
+  const visiblePosts = regularPosts.slice(0, visibleCount);
+  const hasMore = visibleCount < regularPosts.length;
+
+  // Reset visible count when filters change
+  const handleCategoryChange = useCallback((cat: string) => {
+    setActiveCategory(cat);
+    setVisibleCount(PAGE_SIZE);
+  }, []);
+
+  const handleSearchChange = useCallback((val: string) => {
+    setSearchQuery(val);
+    setVisibleCount(PAGE_SIZE);
+  }, []);
+
+  const handleLoadMore = useCallback(() => {
+    setVisibleCount((prev) => prev + PAGE_SIZE);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0B1120]">
@@ -135,7 +180,7 @@ export default function Blog() {
                 type="text"
                 placeholder="Search articles..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 bg-[#0F1729] border border-[#D4A853]/15 rounded-sm text-[#E8E4DD] placeholder-[#E8E4DD]/30 focus:outline-none focus:border-[#D4A853]/40 transition-colors text-sm"
               />
             </div>
@@ -146,7 +191,7 @@ export default function Blog() {
             {allCategories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => handleCategoryChange(cat)}
                 className={`px-4 py-2 text-sm rounded-sm transition-all duration-300 ${
                   activeCategory === cat
                     ? "bg-[#D4A853] text-[#0B1120] font-semibold"
@@ -223,7 +268,7 @@ export default function Blog() {
       {/* Articles Grid */}
       <section className="pb-24">
         <div className="container">
-          {filteredPosts.length === 0 ? (
+          {filteredPosts.length === 0 && !isLoading ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -238,73 +283,95 @@ export default function Blog() {
               </p>
             </motion.div>
           ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCategory + searchQuery}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {regularPosts.map((post, i) => (
-                  <motion.div
-                    key={post.slug}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: i * 0.08 }}
-                  >
-                    <Link href={`/blog/${post.slug}`}>
-                      <article className="group h-full flex flex-col bg-[#0F1729] border border-[#D4A853]/10 rounded-sm overflow-hidden hover:border-[#D4A853]/25 transition-all duration-500 hover:shadow-lg hover:shadow-[#D4A853]/5">
-                        {/* Image */}
-                        <div className="relative h-48 overflow-hidden">
-                          <img
-                            src={post.image}
-                            alt={post.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0F1729] via-transparent to-transparent" />
-                          <div className="absolute bottom-3 left-3">
-                            <span className="px-2.5 py-1 bg-[#0B1120]/80 backdrop-blur-sm text-[#D4A853] text-[10px] font-semibold uppercase tracking-wider rounded-sm border border-[#D4A853]/20">
-                              {post.category}
-                            </span>
+            <>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeCategory + searchQuery}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                  {visiblePosts.map((post, i) => (
+                    <motion.div
+                      key={post.slug}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: Math.min(i, 11) * 0.08 }}
+                    >
+                      <Link href={`/blog/${post.slug}`}>
+                        <article className="group h-full flex flex-col bg-[#0F1729] border border-[#D4A853]/10 rounded-sm overflow-hidden hover:border-[#D4A853]/25 transition-all duration-500 hover:shadow-lg hover:shadow-[#D4A853]/5">
+                          {/* Image */}
+                          <div className="relative h-48 overflow-hidden">
+                            <img
+                              src={post.image}
+                              alt={post.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0F1729] via-transparent to-transparent" />
+                            <div className="absolute bottom-3 left-3">
+                              <span className="px-2.5 py-1 bg-[#0B1120]/80 backdrop-blur-sm text-[#D4A853] text-[10px] font-semibold uppercase tracking-wider rounded-sm border border-[#D4A853]/20">
+                                {post.category}
+                              </span>
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Content */}
-                        <div className="p-6 flex flex-col flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <span className="flex items-center gap-1.5 text-xs text-[#E8E4DD]/35">
-                              <Clock size={11} />
-                              {post.readTime}
-                            </span>
-                            <span className="text-[#E8E4DD]/15">|</span>
-                            <span className="text-xs text-[#E8E4DD]/35">
-                              {post.date}
-                            </span>
+                          {/* Content */}
+                          <div className="p-6 flex flex-col flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <span className="flex items-center gap-1.5 text-xs text-[#E8E4DD]/35">
+                                <Clock size={11} />
+                                {post.readTime}
+                              </span>
+                              <span className="text-[#E8E4DD]/15">|</span>
+                              <span className="text-xs text-[#E8E4DD]/35">
+                                {post.date}
+                              </span>
+                            </div>
+                            <h3 className="text-lg font-serif text-white mb-3 leading-snug group-hover:text-[#D4A853] transition-colors duration-300">
+                              {post.title}
+                            </h3>
+                            <p className="text-sm text-[#E8E4DD]/40 leading-relaxed flex-1">
+                              {post.excerpt}
+                            </p>
+                            <div className="mt-5 pt-4 border-t border-[#D4A853]/8 flex items-center justify-between">
+                              <span className="text-xs text-[#E8E4DD]/30">
+                                By {post.author}
+                              </span>
+                              <span className="flex items-center gap-1.5 text-xs text-[#D4A853] font-medium group-hover:gap-2.5 transition-all duration-300">
+                                Read
+                                <ArrowRight size={12} />
+                              </span>
+                            </div>
                           </div>
-                          <h3 className="text-lg font-serif text-white mb-3 leading-snug group-hover:text-[#D4A853] transition-colors duration-300">
-                            {post.title}
-                          </h3>
-                          <p className="text-sm text-[#E8E4DD]/40 leading-relaxed flex-1">
-                            {post.excerpt}
-                          </p>
-                          <div className="mt-5 pt-4 border-t border-[#D4A853]/8 flex items-center justify-between">
-                            <span className="text-xs text-[#E8E4DD]/30">
-                              By {post.author}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-xs text-[#D4A853] font-medium group-hover:gap-2.5 transition-all duration-300">
-                              Read
-                              <ArrowRight size={12} />
-                            </span>
-                          </div>
-                        </div>
-                      </article>
-                    </Link>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </AnimatePresence>
+                        </article>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="flex justify-center mt-12">
+                  <button
+                    onClick={handleLoadMore}
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#0F1729] border border-[#D4A853]/20 text-[#D4A853] text-sm font-medium rounded-sm hover:border-[#D4A853]/50 hover:bg-[#D4A853]/10 transition-all duration-300"
+                  >
+                    Load More Articles
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
+
+              {/* Loading initial */}
+              {isLoading && (
+                <div className="flex justify-center py-20">
+                  <Loader2 size={32} className="animate-spin text-[#D4A853]/50" />
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

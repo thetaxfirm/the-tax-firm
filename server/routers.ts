@@ -363,10 +363,18 @@ export const appRouter = router({
   }),
 
   blog: router({
-    /** Public: get all published dynamic articles */
-    published: publicProcedure.query(async () => {
-      return getPublishedBlogArticles();
-    }),
+    /** Public: get published dynamic articles with cursor pagination */
+    published: publicProcedure
+      .input(z.object({
+        limit: z.number().min(1).max(100).default(12),
+        cursor: z.number().nullish(),
+      }))
+      .query(async ({ input }) => {
+        return getPublishedBlogArticles({
+          limit: input.limit,
+          cursor: input.cursor ?? undefined,
+        });
+      }),
 
     /** Public: get a single article by slug */
     bySlug: publicProcedure

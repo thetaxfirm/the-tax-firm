@@ -11,12 +11,14 @@ import { trpc } from "@/lib/trpc";
 import { useMemo } from "react";
 
 export default function BlogPreview() {
-  const { data: dynamicArticles } = trpc.blog.published.useQuery(undefined, {
-    staleTime: 60_000,
-  });
+  const { data: dynamicData } = trpc.blog.published.useQuery(
+    { limit: 12 },
+    { staleTime: 60_000 }
+  );
 
   const previewPosts = useMemo(() => {
-    const dbPosts: BlogPost[] = (dynamicArticles || []).map((a) => ({
+    const rawItems = Array.isArray(dynamicData) ? dynamicData : (dynamicData?.items || []);
+    const dbPosts: BlogPost[] = rawItems.map((a: any) => ({
       slug: a.slug,
       title: a.title,
       excerpt: a.excerpt,
@@ -36,7 +38,7 @@ export default function BlogPreview() {
     const staticSlugs = new Set(blogPosts.map((p) => p.slug));
     const uniqueDbPosts = dbPosts.filter((p) => !staticSlugs.has(p.slug));
     return [...blogPosts, ...uniqueDbPosts].slice(0, 3);
-  }, [dynamicArticles]);
+  }, [dynamicData]);
 
   return (
     <section className="py-24 section-dark" id="resources">
