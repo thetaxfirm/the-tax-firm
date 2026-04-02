@@ -3,6 +3,7 @@ import { ArrowRight, TrendingUp, BarChart3, PieChart, DollarSign, FileText, User
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import JsonLd from "@/components/JsonLd";
 import CFOCalculator from "@/components/CFOCalculator";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
@@ -89,6 +90,14 @@ export default function FractionalCFO() {
         title="Fractional CFO Services"
         description="Get executive-level financial leadership without the full-time cost. The Tax Firm's Fractional CFO services provide strategic financial planning, reporting, budgeting, and cash flow management for growing businesses."
       />
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "Service",
+        serviceType: "Fractional CFO Services",
+        provider: { "@type": "AccountingService", name: "The Tax Firm", url: "https://thetaxfirm.us" },
+        areaServed: "US",
+        description: "Executive-level financial leadership without the full-time cost. Strategic financial planning, reporting, budgeting, and cash flow management for businesses earning $250K+.",
+      }} />
       <Navbar />
 
       {/* Hero Section */}

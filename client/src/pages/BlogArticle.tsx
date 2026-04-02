@@ -21,6 +21,21 @@ import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import JsonLd from "@/components/JsonLd";
+
+function extractExcerpt(content: string): string {
+  // Strip HTML tags
+  const text = content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  // Try to find text after "Introduction"
+  const introIdx = text.indexOf("Introduction");
+  const start = introIdx !== -1 ? introIdx + "Introduction".length : 0;
+  const clean = text.slice(start).trim();
+  return clean.slice(0, 200) + "...";
+}
+
+function isHtmlContent(content: string): boolean {
+  return /^\s*<[a-z][\s\S]*>/i.test(content);
+}
 
 /* Simple markdown-to-JSX renderer for article content */
 function renderMarkdown(content: string) {
@@ -200,7 +215,7 @@ export default function BlogArticle() {
       return {
         slug: dbArticle.slug,
         title: dbArticle.title,
-        excerpt: dbArticle.excerpt,
+        excerpt: isHtmlContent(dbArticle.excerpt) ? extractExcerpt(dbArticle.content) : dbArticle.excerpt,
         category: dbArticle.category,
         readTime: dbArticle.readTime,
         date: new Date(dbArticle.publishedAt).toLocaleDateString("en-US", {
@@ -218,13 +233,15 @@ export default function BlogArticle() {
     return undefined;
   }, [staticPost, dbArticle]);
 
-  // Fetch all dynamic articles for related posts
-  const { data: allDynamic } = trpc.blog.published.useQuery(undefined, {
-    staleTime: 60_000,
-  });
+  // Fetch dynamic articles for related posts (just first page is enough)
+  const { data: dynamicData } = trpc.blog.published.useQuery(
+    { limit: 50 },
+    { staleTime: 60_000 }
+  );
 
   const allPosts = useMemo(() => {
-    const dbPosts: BlogPost[] = (allDynamic || []).map((a) => ({
+    const rawItems = Array.isArray(dynamicData) ? dynamicData : (dynamicData?.items || []);
+    const dbPosts: BlogPost[] = rawItems.map((a: any) => ({
       slug: a.slug,
       title: a.title,
       excerpt: a.excerpt,
@@ -244,7 +261,7 @@ export default function BlogArticle() {
     const staticSlugs = new Set(blogPosts.map((p) => p.slug));
     const uniqueDbPosts = dbPosts.filter((p) => !staticSlugs.has(p.slug));
     return [...blogPosts, ...uniqueDbPosts];
-  }, [allDynamic]);
+  }, [dynamicData]);
 
   const relatedPosts = useMemo(() => {
     if (!post) return [];
@@ -316,6 +333,36 @@ export default function BlogArticle() {
         author={post.author}
         publishedTime={post.date}
       />
+      <JsonLd data={[
+        {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: post.title,
+          description: post.excerpt,
+          image: post.image,
+          author: {
+            "@type": "Person",
+            name: post.author,
+            jobTitle: post.authorRole,
+          },
+          publisher: {
+            "@type": "Organization",
+            name: "The Tax Firm",
+            url: "https://thetaxfirm.us",
+          },
+          datePublished: post.date,
+          mainEntityOfPage: `https://thetaxfirm.us/blog/${post.slug}`,
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://thetaxfirm.us/" },
+            { "@type": "ListItem", position: 2, name: "Blog", item: "https://thetaxfirm.us/blog" },
+            { "@type": "ListItem", position: 3, name: post.title },
+          ],
+        },
+      ]} />
       <Navbar />
 
       {/* Article Header */}
@@ -468,7 +515,14 @@ export default function BlogArticle() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="max-w-3xl"
           >
-            {renderMarkdown(post.content)}
+            {isHtmlContent(post.content) ? (
+              <div
+                className="blog-html-content"
+                dangerouslySetInnerHTML={{ __html: post.content }}
+              />
+            ) : (
+              renderMarkdown(post.content)
+            )}
           </motion.div>
         </div>
       </section>

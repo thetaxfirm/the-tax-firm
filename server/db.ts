@@ -1,4 +1,4 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, InsertQuestionnaireResponse, InsertEngagement, InsertDocument, InsertMessage, InsertBlogArticle,
@@ -237,10 +237,23 @@ export async function getBlogArticleByExternalId(externalId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function getPublishedBlogArticles() {
+export async function getPublishedBlogArticles(opts?: { limit?: number; cursor?: number }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.select().from(blogArticles).where(eq(blogArticles.status, "published")).orderBy(desc(blogArticles.publishedAt));
+  const limit = opts?.limit ?? 50;
+  const query = db.select().from(blogArticles)
+    .where(
+      opts?.cursor
+        ? and(eq(blogArticles.status, "published"), lt(blogArticles.id, opts.cursor))
+        : eq(blogArticles.status, "published")
+    )
+    .orderBy(desc(blogArticles.publishedAt))
+    .limit(limit + 1);
+  const rows = await query;
+  const hasMore = rows.length > limit;
+  const items = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore ? items[items.length - 1].id : null;
+  return { items, nextCursor };
 }
 
 export async function getAllBlogArticles() {

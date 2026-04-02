@@ -1,4 +1,6 @@
 import SEOHead from "@/components/SEOHead";
+import JsonLd from "@/components/JsonLd";
+import { faqs } from "@/data/faqData";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import TrustStrip from "@/components/TrustStrip";
@@ -22,6 +24,15 @@ export default function Home() {
         title="The Tax Firm"
         description="The Tax Firm helps small business owners and high-income earners dramatically reduce their tax burden through proactive tax planning, asset protection, and wealth-building strategies."
       />
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f) => ({
+          "@type": "Question",
+          name: f.question,
+          acceptedAnswer: { "@type": "Answer", text: f.answer },
+        })),
+      }} />
       <Navbar />
       <Hero />
       <TrustStrip />

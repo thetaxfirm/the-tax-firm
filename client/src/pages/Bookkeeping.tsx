@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, Calculator, ClipboardCheck, Receipt, FileBarChart
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import JsonLd from "@/components/JsonLd";
 import BookkeepingCalculator from "@/components/BookkeepingCalculator";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
 
@@ -118,6 +119,14 @@ export default function Bookkeeping() {
         title="Professional Bookkeeping Services"
         description="Accurate, timely bookkeeping that keeps your finances organized and tax-ready. The Tax Firm offers full-service bookkeeping, accounts payable/receivable, bank reconciliation, payroll processing, and financial reporting."
       />
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "Service",
+        serviceType: "Bookkeeping Services",
+        provider: { "@type": "AccountingService", name: "The Tax Firm", url: "https://thetaxfirm.us" },
+        areaServed: "US",
+        description: "Full-service bookkeeping, payroll processing, accounts payable/receivable, monthly financial statements, and tax-ready record keeping.",
+      }} />
       <Navbar />
 
       {/* Hero Section */}

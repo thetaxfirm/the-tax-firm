@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { blogApiRouter } from "../blogApi";
+import { generateSitemapXml } from "./sitemap";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -34,6 +35,18 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Dynamic sitemap (always fresh from DB)
+  app.get("/sitemap.xml", async (_req, res) => {
+    try {
+      const xml = await generateSitemapXml();
+      res.set("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (err) {
+      console.error("[sitemap] Error:", err);
+      res.status(500).send("Sitemap generation failed");
+    }
+  });
+
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // Blog REST API for external publishing (Tely.ai, etc.)
