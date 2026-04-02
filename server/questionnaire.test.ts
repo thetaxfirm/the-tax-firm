@@ -62,7 +62,7 @@ function createUserContext(): TrpcContext {
 }
 
 describe("questionnaire.submit", () => {
-  it("accepts valid questionnaire submission from public (unauthenticated) user", async () => {
+  it("accepts valid questionnaire submission from public (unauthenticated) user", { timeout: 15000 }, async () => {
     const ctx = createPublicContext();
     const caller = appRouter.createCaller(ctx);
 

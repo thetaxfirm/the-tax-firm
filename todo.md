@@ -52,3 +52,4 @@
 - [x] Build tRPC admin endpoints for managing API-published articles
 - [x] Update blog frontend to merge static and database articles
 - [x] Write tests for the blog API endpoint
+- [x] Fix blog API not working in production environment (was stale deploy - needs re-publish)
