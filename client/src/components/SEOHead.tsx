@@ -3,6 +3,7 @@ import { useEffect } from "react";
 interface SEOHeadProps {
   title: string;
   description: string;
+  keywords?: string;
   image?: string;
   url?: string;
   type?: "website" | "article";
@@ -17,6 +18,7 @@ interface SEOHeadProps {
 export default function SEOHead({
   title,
   description,
+  keywords,
   image = "https://manus.storage.googleapis.com/the-tax-firm-og-default.jpg",
   url,
   type = "website",
@@ -54,6 +56,7 @@ export default function SEOHead({
 
     // Standard meta
     setMeta("description", description, true);
+    if (keywords) setMeta("keywords", keywords, true);
 
     // Open Graph
     setMeta("og:title", fullTitle);
@@ -77,11 +80,11 @@ export default function SEOHead({
 
     // Cleanup on unmount
     return () => {
-      document.title = "The Tax Firm | Advanced Tax Strategy & Planning";
+      document.title = "Tax Strategy & Planning for Business Owners | The Tax Firm";
       const link = document.querySelector('link[rel="canonical"]');
       if (link) link.remove();
     };
-  }, [title, description, image, url, type, author, publishedTime]);
+  }, [title, description, keywords, image, url, type, author, publishedTime]);
 
   return null;
 }

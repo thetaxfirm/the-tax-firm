@@ -21,8 +21,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0B1120]">
       <SEOHead
-        title="The Tax Firm"
-        description="The Tax Firm helps small business owners and high-income earners dramatically reduce their tax burden through proactive tax planning, asset protection, and wealth-building strategies."
+        title="Tax Strategy & Planning for Business Owners"
+        description="Reduce your tax burden with proactive tax planning, asset protection, and wealth-building strategies for small business owners and high-income earners."
+        keywords="tax strategy, tax planning, tax reduction, asset protection, wealth building, small business taxes, enrolled agent, Las Vegas tax firm, fractional CFO, bookkeeping, Roth conversion, cost segregation"
       />
       <JsonLd data={{
         "@context": "https://schema.org",

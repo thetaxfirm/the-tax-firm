@@ -53,3 +53,6 @@
 - [x] Update blog frontend to merge static and database articles
 - [x] Write tests for the blog API endpoint
 - [x] Fix blog API not working in production environment (was stale deploy - needs re-publish)
+- [x] Fix homepage SEO: add keywords meta tag
+- [x] Fix homepage SEO: optimize title to 30-60 characters
+- [x] Fix homepage SEO: trim meta description to under 160 characters
