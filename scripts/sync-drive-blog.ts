@@ -141,11 +141,50 @@ const SUPPORTED_MIME_TYPES = new Set([
   "text/html",
 ]);
 
+function isImageFile(file: DriveFile): boolean {
+  return file.mimeType.startsWith("image/");
+}
+
 function isSupportedFile(file: DriveFile): boolean {
   if (SUPPORTED_MIME_TYPES.has(file.mimeType)) return true;
   // Also support .md and .txt files regardless of reported MIME type
   if (/\.(md|txt|markdown)$/i.test(file.name)) return true;
   return false;
+}
+
+/**
+ * Get a direct-access thumbnail URL for a Drive file via the API.
+ * Returns an lh3.googleusercontent.com URL that works in <img> tags.
+ */
+async function getDriveThumbnail(fileId: string): Promise<string | null> {
+  try {
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=thumbnailLink&key=${GOOGLE_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.thumbnailLink) return null;
+    // Replace small thumbnail size with 800px for blog images
+    return data.thumbnailLink.replace(/=s\d+$/, "=s800");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build a map of normalized article title -> Drive file ID from image files.
+ * Image names follow the pattern: prefix-article-title-slug.webp
+ */
+function buildImageFileMap(files: DriveFile[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const file of files) {
+    if (!isImageFile(file)) continue;
+    // Strip the random prefix (e.g. "fafwnrga-") and extension
+    const nameWithoutExt = file.name.replace(/\.[^.]+$/, "");
+    const withoutPrefix = nameWithoutExt.replace(/^[a-z0-9]+-/, "");
+    const normalized = withoutPrefix.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    map.set(normalized, file.id);
+  }
+  return map;
 }
 
 async function getFileContent(file: DriveFile): Promise<string> {
@@ -194,21 +233,27 @@ async function publishArticle(article: {
   content: string;
   category?: string;
   externalId: string;
+  image?: string;
 }): Promise<{ success: boolean; action: string; slug: string }> {
+  const body: Record<string, string> = {
+    title: article.title,
+    content: article.content,
+    category: article.category || "Tax Strategy",
+    source: "google-drive",
+    externalId: article.externalId,
+    status: "published",
+  };
+  if (article.image) {
+    body.image = article.image;
+  }
+
   const res = await fetch(`${BLOG_API_URL}/articles`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${BLOG_API_KEY}`,
     },
-    body: JSON.stringify({
-      title: article.title,
-      content: article.content,
-      category: article.category || "Tax Strategy",
-      source: "google-drive",
-      externalId: article.externalId,
-      status: "published",
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -244,6 +289,10 @@ async function sync() {
   console.log(`[sync] Found ${files.length} file(s) in Drive folder`);
   console.log(`[sync] Tracking ${Object.keys(published).length} published article(s)`);
 
+  // Build image file ID map from Drive image files
+  const imageFileMap = buildImageFileMap(files);
+  console.log(`[sync] Found ${imageFileMap.size} image(s) for article matching`);
+
   let created = 0;
   let updated = 0;
   let skipped = 0;
@@ -276,11 +325,24 @@ async function sync() {
 
       const content = textToMarkdown(rawContent, title);
 
+      // Match image by slug and get direct thumbnail URL
+      const titleSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const imageFileId = imageFileMap.get(titleSlug);
+      let matchedImage: string | undefined;
+      if (imageFileId) {
+        const thumbUrl = await getDriveThumbnail(imageFileId);
+        if (thumbUrl) {
+          matchedImage = thumbUrl;
+          console.log(`[sync] Matched image for "${title}"`);
+        }
+      }
+
       const result = await publishArticle({
         title,
         content,
         category,
         externalId: `gdrive:${file.id}`,
+        image: matchedImage,
       });
 
       console.log(`[sync] ${result.action}: "${title}" -> /blog/${result.slug}`);
