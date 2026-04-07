@@ -153,38 +153,54 @@ function isSupportedFile(file: DriveFile): boolean {
 }
 
 /**
- * Get a direct-access thumbnail URL for a Drive file via the API.
- * Returns an lh3.googleusercontent.com URL that works in <img> tags.
+ * Get a direct-access image URL for a Drive file.
+ * Tries webContentLink first (direct download for publicly shared files),
+ * then falls back to thumbnailLink from Drive API.
  */
-async function getDriveThumbnail(fileId: string): Promise<string | null> {
+async function getDriveImageUrl(fileId: string): Promise<string | null> {
   try {
-    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=thumbnailLink&key=${GOOGLE_API_KEY}`;
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=webContentLink,thumbnailLink&key=${GOOGLE_API_KEY}`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
-    if (!data.thumbnailLink) return null;
-    // Replace small thumbnail size with 800px for blog images
-    return data.thumbnailLink.replace(/=s\d+$/, "=s800");
+    if (data.webContentLink) return data.webContentLink;
+    if (data.thumbnailLink) return data.thumbnailLink.replace(/=s\d+$/, "=s1600");
+    return null;
   } catch {
     return null;
   }
 }
 
 /**
- * Build a map of normalized article title -> Drive file ID from image files.
- * Image names follow the pattern: prefix-article-title-slug.webp
+ * Build a list of image files with their normalized kebab names.
+ * Image names follow the pattern: prefix-article-title-slug.ext
+ * We store the full kebab name so we can match via endsWith against article title slugs.
  */
-function buildImageFileMap(files: DriveFile[]): Map<string, string> {
-  const map = new Map<string, string>();
+function getImageFiles(files: DriveFile[]): Array<{ kebab: string; id: string; name: string }> {
+  const images: Array<{ kebab: string; id: string; name: string }> = [];
   for (const file of files) {
     if (!isImageFile(file)) continue;
-    // Strip the random prefix (e.g. "fafwnrga-") and extension
     const nameWithoutExt = file.name.replace(/\.[^.]+$/, "");
-    const withoutPrefix = nameWithoutExt.replace(/^[a-z0-9]+-/, "");
-    const normalized = withoutPrefix.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    map.set(normalized, file.id);
+    const kebab = nameWithoutExt.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    images.push({ kebab, id: file.id, name: file.name });
   }
-  return map;
+  return images;
+}
+
+/**
+ * Find the image file ID that matches a given article title slug.
+ * Uses endsWith to reliably ignore any prefix in the image filename.
+ */
+function findImageForArticle(
+  images: Array<{ kebab: string; id: string; name: string }>,
+  titleSlug: string,
+): { id: string; name: string } | null {
+  for (const img of images) {
+    if (img.kebab === titleSlug || img.kebab.endsWith(`-${titleSlug}`)) {
+      return img;
+    }
+  }
+  return null;
 }
 
 async function getFileContent(file: DriveFile): Promise<string> {
@@ -289,9 +305,9 @@ async function sync() {
   console.log(`[sync] Found ${files.length} file(s) in Drive folder`);
   console.log(`[sync] Tracking ${Object.keys(published).length} published article(s)`);
 
-  // Build image file ID map from Drive image files
-  const imageFileMap = buildImageFileMap(files);
-  console.log(`[sync] Found ${imageFileMap.size} image(s) for article matching`);
+  // Collect image files for article matching
+  const imageFiles = getImageFiles(files);
+  console.log(`[sync] Found ${imageFiles.length} image(s) for article matching`);
 
   let created = 0;
   let updated = 0;
@@ -325,16 +341,20 @@ async function sync() {
 
       const content = textToMarkdown(rawContent, title);
 
-      // Match image by slug and get direct thumbnail URL
+      // Match image by title slug and get direct image URL
       const titleSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      const imageFileId = imageFileMap.get(titleSlug);
+      const matchedImg = findImageForArticle(imageFiles, titleSlug);
       let matchedImage: string | undefined;
-      if (imageFileId) {
-        const thumbUrl = await getDriveThumbnail(imageFileId);
-        if (thumbUrl) {
-          matchedImage = thumbUrl;
-          console.log(`[sync] Matched image for "${title}"`);
+      if (matchedImg) {
+        const imgUrl = await getDriveImageUrl(matchedImg.id);
+        if (imgUrl) {
+          matchedImage = imgUrl;
+          console.log(`[sync] Matched image "${matchedImg.name}" for "${title}"`);
+        } else {
+          console.log(`[sync] Image matched but URL fetch failed for "${matchedImg.name}"`);
         }
+      } else {
+        console.log(`[sync] No image match for "${title}" (slug: ${titleSlug})`);
       }
 
       const result = await publishArticle({
@@ -363,6 +383,63 @@ async function sync() {
 
   savePublished(published);
   console.log(`[sync] Done. Created: ${created}, Updated: ${updated}, Skipped: ${skipped}`);
+}
+
+/**
+ * Fix images for all already-published articles.
+ * Matches Drive image files to articles by slug and updates via PUT API.
+ */
+async function fixImages() {
+  if (!GOOGLE_API_KEY || !DRIVE_FOLDER_ID || !BLOG_API_KEY) {
+    console.error("[fix-images] Missing required env vars");
+    process.exit(1);
+  }
+
+  const published = loadPublished();
+  const files = await listDriveFiles();
+  const imageFiles = getImageFiles(files);
+
+  console.log(`[fix-images] ${Object.keys(published).length} published article(s), ${imageFiles.length} image(s) in Drive`);
+
+  let fixed = 0;
+  let failed = 0;
+
+  for (const [, entry] of Object.entries(published)) {
+    const titleSlug = entry.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const matchedImg = findImageForArticle(imageFiles, titleSlug);
+
+    if (!matchedImg) {
+      console.log(`[fix-images] No image found for "${entry.title}" (slug: ${titleSlug})`);
+      continue;
+    }
+
+    const imgUrl = await getDriveImageUrl(matchedImg.id);
+    if (!imgUrl) {
+      console.log(`[fix-images] URL fetch failed for "${matchedImg.name}"`);
+      failed++;
+      continue;
+    }
+
+    // Update article image via PUT API
+    const res = await fetch(`${BLOG_API_URL}/articles/${entry.slug}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${BLOG_API_KEY}`,
+      },
+      body: JSON.stringify({ image: imgUrl }),
+    });
+
+    if (res.ok) {
+      console.log(`[fix-images] Updated "${entry.title}" -> ${matchedImg.name}`);
+      fixed++;
+    } else {
+      console.log(`[fix-images] PUT failed for "${entry.slug}": ${res.status}`);
+      failed++;
+    }
+  }
+
+  console.log(`[fix-images] Done. Fixed: ${fixed}, Failed: ${failed}`);
 }
 
 // ── HTTP server for seed/status endpoints ───────────────
@@ -449,6 +526,21 @@ function startServer() {
       return;
     }
 
+    // Fix images for already-published articles
+    if (req.method === "POST" && req.url === "/fix-images") {
+      const auth = req.headers.authorization;
+      if (!auth || auth !== `Bearer ${BLOG_API_KEY}`) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Unauthorized" }));
+        return;
+      }
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ status: "fix-images started" }));
+      fixImages().catch(console.error);
+      return;
+    }
+
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Not found" }));
   });
@@ -459,6 +551,7 @@ function startServer() {
     console.log(`[server] GET  /published        — list tracked articles`);
     console.log(`[server] POST /published/seed   — restore published state`);
     console.log(`[server] POST /sync             — trigger sync manually`);
+    console.log(`[server] POST /fix-images       — update images for published articles`);
   });
 }
 
@@ -466,7 +559,12 @@ function startServer() {
 
 const mode = process.argv[2];
 
-if (mode === "serve") {
+if (mode === "fix-images") {
+  fixImages().catch((err) => {
+    console.error("[fix-images] Fatal error:", err);
+    process.exit(1);
+  });
+} else if (mode === "serve") {
   // Long-running mode: start HTTP server + run sync on schedule
   ensureDataDir();
   startServer();
