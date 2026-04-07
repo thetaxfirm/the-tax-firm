@@ -154,18 +154,19 @@ function isSupportedFile(file: DriveFile): boolean {
 
 /**
  * Get a direct-access image URL for a Drive file.
- * Tries webContentLink first (direct download for publicly shared files),
- * then falls back to thumbnailLink from Drive API.
+ * Uses thumbnailLink from Drive API — lh3.googleusercontent.com URLs
+ * load directly in <img> tags without CORS issues.
+ * webContentLink (drive.google.com/uc) does NOT work in img tags due to redirects.
  */
 async function getDriveImageUrl(fileId: string): Promise<string | null> {
   try {
-    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=webContentLink,thumbnailLink&key=${GOOGLE_API_KEY}`;
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=thumbnailLink&key=${GOOGLE_API_KEY}`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.webContentLink) return data.webContentLink;
-    if (data.thumbnailLink) return data.thumbnailLink.replace(/=s\d+$/, "=s1600");
-    return null;
+    if (!data.thumbnailLink) return null;
+    // Replace default small size with 1600px for high-quality blog images
+    return data.thumbnailLink.replace(/=s\d+$/, "=s1600");
   } catch {
     return null;
   }
