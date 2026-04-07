@@ -153,20 +153,30 @@ function isSupportedFile(file: DriveFile): boolean {
 }
 
 /**
- * Get a direct-access image URL for a Drive file.
- * Uses thumbnailLink from Drive API — lh3.googleusercontent.com URLs
- * load directly in <img> tags without CORS issues.
- * webContentLink (drive.google.com/uc) does NOT work in img tags due to redirects.
+ * Download image from Drive and upload to CDN via Blog API.
+ * Returns the CDN URL for use in <img> tags.
  */
-async function getDriveImageUrl(fileId: string): Promise<string | null> {
+async function uploadImageToCdn(fileId: string, slug: string, mimeType: string): Promise<string | null> {
   try {
-    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=thumbnailLink&key=${GOOGLE_API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.thumbnailLink) return null;
-    // Replace default small size with 1600px for high-quality blog images
-    return data.thumbnailLink.replace(/=s\d+$/, "=s1600");
+    // Download image bytes from Drive
+    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
+    const dlRes = await fetch(downloadUrl);
+    if (!dlRes.ok) return null;
+    const imageBuffer = Buffer.from(await dlRes.arrayBuffer());
+
+    // Upload to CDN via Blog API
+    const uploadRes = await fetch(`${BLOG_API_URL}/upload-image?slug=${encodeURIComponent(slug)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": mimeType,
+        Authorization: `Bearer ${BLOG_API_KEY}`,
+      },
+      body: imageBuffer,
+    });
+
+    if (!uploadRes.ok) return null;
+    const data = await uploadRes.json();
+    return data.url || null;
   } catch {
     return null;
   }
@@ -177,13 +187,13 @@ async function getDriveImageUrl(fileId: string): Promise<string | null> {
  * Image names follow the pattern: prefix-article-title-slug.ext
  * We store the full kebab name so we can match via endsWith against article title slugs.
  */
-function getImageFiles(files: DriveFile[]): Array<{ kebab: string; id: string; name: string }> {
-  const images: Array<{ kebab: string; id: string; name: string }> = [];
+function getImageFiles(files: DriveFile[]): Array<{ kebab: string; id: string; name: string; mimeType: string }> {
+  const images: Array<{ kebab: string; id: string; name: string; mimeType: string }> = [];
   for (const file of files) {
     if (!isImageFile(file)) continue;
     const nameWithoutExt = file.name.replace(/\.[^.]+$/, "");
     const kebab = nameWithoutExt.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    images.push({ kebab, id: file.id, name: file.name });
+    images.push({ kebab, id: file.id, name: file.name, mimeType: file.mimeType });
   }
   return images;
 }
@@ -193,9 +203,9 @@ function getImageFiles(files: DriveFile[]): Array<{ kebab: string; id: string; n
  * Uses endsWith to reliably ignore any prefix in the image filename.
  */
 function findImageForArticle(
-  images: Array<{ kebab: string; id: string; name: string }>,
+  images: Array<{ kebab: string; id: string; name: string; mimeType: string }>,
   titleSlug: string,
-): { id: string; name: string } | null {
+): { id: string; name: string; mimeType: string } | null {
   for (const img of images) {
     if (img.kebab === titleSlug || img.kebab.endsWith(`-${titleSlug}`)) {
       return img;
@@ -342,17 +352,17 @@ async function sync() {
 
       const content = textToMarkdown(rawContent, title);
 
-      // Match image by title slug and get direct image URL
+      // Match image, download from Drive, upload to CDN
       const titleSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       const matchedImg = findImageForArticle(imageFiles, titleSlug);
       let matchedImage: string | undefined;
       if (matchedImg) {
-        const imgUrl = await getDriveImageUrl(matchedImg.id);
-        if (imgUrl) {
-          matchedImage = imgUrl;
-          console.log(`[sync] Matched image "${matchedImg.name}" for "${title}"`);
+        const cdnUrl = await uploadImageToCdn(matchedImg.id, titleSlug, matchedImg.mimeType);
+        if (cdnUrl) {
+          matchedImage = cdnUrl;
+          console.log(`[sync] Uploaded image "${matchedImg.name}" to CDN for "${title}"`);
         } else {
-          console.log(`[sync] Image matched but URL fetch failed for "${matchedImg.name}"`);
+          console.log(`[sync] Image upload failed for "${matchedImg.name}"`);
         }
       } else {
         console.log(`[sync] No image match for "${title}" (slug: ${titleSlug})`);
@@ -414,9 +424,9 @@ async function fixImages() {
       continue;
     }
 
-    const imgUrl = await getDriveImageUrl(matchedImg.id);
-    if (!imgUrl) {
-      console.log(`[fix-images] URL fetch failed for "${matchedImg.name}"`);
+    const cdnUrl = await uploadImageToCdn(matchedImg.id, titleSlug, matchedImg.mimeType);
+    if (!cdnUrl) {
+      console.log(`[fix-images] Upload failed for "${matchedImg.name}"`);
       failed++;
       continue;
     }
@@ -428,7 +438,7 @@ async function fixImages() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${BLOG_API_KEY}`,
       },
-      body: JSON.stringify({ image: imgUrl }),
+      body: JSON.stringify({ image: cdnUrl }),
     });
 
     if (res.ok) {
