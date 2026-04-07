@@ -311,42 +311,38 @@ blogApiRouter.delete("/articles/:slug", authenticateApiKey, async (req: Request,
 
 /* ── POST /api/blog/upload-image — Upload image to CDN ─────── */
 
-blogApiRouter.post("/upload-image", authenticateApiKey, async (req: Request, res: Response) => {
-  try {
-    const contentType = req.headers["content-type"] || "";
+import express from "express";
 
-    // Accept raw binary image (Content-Type: image/*)
-    if (!contentType.startsWith("image/")) {
-      res.status(400).json({ error: "Content-Type must be image/* (send raw image bytes)" });
-      return;
-    }
-
-    const chunks: Buffer[] = [];
-    req.on("data", (chunk: Buffer) => chunks.push(chunk));
-    req.on("end", async () => {
-      try {
-        const imageData = Buffer.concat(chunks);
-        if (imageData.length === 0) {
-          res.status(400).json({ error: "Empty image body" });
-          return;
-        }
-
-        const ext = contentType.split("/")[1]?.replace("jpeg", "jpg") || "png";
-        const hash = crypto.createHash("md5").update(imageData).digest("hex").slice(0, 12);
-        const slug = (req.query.slug as string) || "blog";
-        const key = `blog/${slug}_${hash}.${ext}`;
-
-        const result = await storagePut(key, imageData, contentType);
-        res.json({ success: true, url: result.url, key: result.key });
-      } catch (err: any) {
-        console.error("[Blog API] Image upload error:", err);
-        res.status(500).json({ error: "Upload failed", details: err.message });
+blogApiRouter.post(
+  "/upload-image",
+  authenticateApiKey,
+  express.raw({ type: "image/*", limit: "10mb" }),
+  async (req: Request, res: Response) => {
+    try {
+      const contentType = req.headers["content-type"] || "";
+      if (!contentType.startsWith("image/")) {
+        res.status(400).json({ error: "Content-Type must be image/* (send raw image bytes)" });
+        return;
       }
-    });
-  } catch (error: any) {
-    console.error("[Blog API] Image upload error:", error);
-    res.status(500).json({ error: "Upload failed", details: error.message });
+
+      const imageData = req.body as Buffer;
+      if (!imageData || imageData.length === 0) {
+        res.status(400).json({ error: "Empty image body" });
+        return;
+      }
+
+      const ext = contentType.split("/")[1]?.replace("jpeg", "jpg") || "png";
+      const hash = crypto.createHash("md5").update(imageData).digest("hex").slice(0, 12);
+      const slug = (req.query.slug as string) || "blog";
+      const key = `blog/${slug}_${hash}.${ext}`;
+
+      const result = await storagePut(key, imageData, contentType);
+      res.json({ success: true, url: result.url, key: result.key });
+    } catch (err: any) {
+      console.error("[Blog API] Image upload error:", err);
+      res.status(500).json({ error: "Upload failed", details: err.message });
+    }
   }
-});
+);
 
 export { blogApiRouter };
