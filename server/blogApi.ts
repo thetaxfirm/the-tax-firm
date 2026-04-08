@@ -28,6 +28,10 @@ import {
   upsertBlogArticleBySlug,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+import { storagePut } from "./storage";
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 const blogApiRouter = Router();
 
@@ -306,5 +310,54 @@ blogApiRouter.delete("/articles/:slug", authenticateApiKey, async (req: Request,
     res.status(500).json({ error: "Failed to delete article", details: error.message });
   }
 });
+
+/* ── POST /api/blog/upload-image — Upload image to CDN ─────── */
+
+import express from "express";
+
+blogApiRouter.post(
+  "/upload-image",
+  authenticateApiKey,
+  express.raw({ type: "image/*", limit: "10mb" }),
+  async (req: Request, res: Response) => {
+    try {
+      const contentType = req.headers["content-type"] || "";
+      if (!contentType.startsWith("image/")) {
+        res.status(400).json({ error: "Content-Type must be image/* (send raw image bytes)" });
+        return;
+      }
+
+      const imageData = req.body as Buffer;
+      if (!imageData || imageData.length === 0) {
+        res.status(400).json({ error: "Empty image body" });
+        return;
+      }
+
+      const ext = contentType.split("/")[1]?.replace("jpeg", "jpg") || "png";
+      const hash = crypto.createHash("md5").update(imageData).digest("hex").slice(0, 12);
+      const slug = (req.query.slug as string) || "blog";
+      const fileName = `${slug}_${hash}.${ext}`;
+
+      // Production: upload to Manus CDN via Forge API
+      if (process.env.BUILT_IN_FORGE_API_URL) {
+        const result = await storagePut(`blog/${fileName}`, imageData, contentType);
+        res.json({ success: true, url: result.url, key: result.key });
+        return;
+      }
+
+      // Local fallback: save to client/public/blog-images/
+      const publicDir = path.resolve(import.meta.dirname, "../client/public/blog-images");
+      if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+      const filePath = path.join(publicDir, fileName);
+      fs.writeFileSync(filePath, imageData);
+      const localUrl = `/blog-images/${fileName}`;
+      console.log(`[Blog API] Saved image locally: ${filePath}`);
+      res.json({ success: true, url: localUrl, key: `blog/${fileName}` });
+    } catch (err: any) {
+      console.error("[Blog API] Image upload error:", err);
+      res.status(500).json({ error: "Upload failed", details: err.message });
+    }
+  }
+);
 
 export { blogApiRouter };

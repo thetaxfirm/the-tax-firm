@@ -204,7 +204,7 @@ export default function BlogArticle() {
     [slug]
   );
 
-  const { data: dbArticle } = trpc.blog.bySlug.useQuery(
+  const { data: dbArticle, isLoading } = trpc.blog.bySlug.useQuery(
     { slug: slug || "" },
     { enabled: !staticPost && !!slug, staleTime: 60_000 }
   );
@@ -276,6 +276,29 @@ export default function BlogArticle() {
       )
       .slice(0, 3);
   }, [post, slug, allPosts]);
+
+  if (!staticPost && isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0B1120] flex flex-col">
+        <Navbar />
+        <div className="flex-1 max-w-4xl mx-auto px-4 py-16 w-full">
+          <div className="animate-pulse">
+            <div className="h-64 md:h-80 bg-[#1a2332] rounded-lg mb-8" />
+            <div className="h-8 bg-[#1a2332] rounded w-3/4 mb-4" />
+            <div className="h-4 bg-[#1a2332] rounded w-1/2 mb-8" />
+            <div className="space-y-3">
+              <div className="h-4 bg-[#1a2332] rounded w-full" />
+              <div className="h-4 bg-[#1a2332] rounded w-full" />
+              <div className="h-4 bg-[#1a2332] rounded w-5/6" />
+              <div className="h-4 bg-[#1a2332] rounded w-full" />
+              <div className="h-4 bg-[#1a2332] rounded w-4/6" />
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
