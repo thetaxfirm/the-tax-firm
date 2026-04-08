@@ -30,6 +30,8 @@ import {
 import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 const blogApiRouter = Router();
 
@@ -334,10 +336,23 @@ blogApiRouter.post(
       const ext = contentType.split("/")[1]?.replace("jpeg", "jpg") || "png";
       const hash = crypto.createHash("md5").update(imageData).digest("hex").slice(0, 12);
       const slug = (req.query.slug as string) || "blog";
-      const key = `blog/${slug}_${hash}.${ext}`;
+      const fileName = `${slug}_${hash}.${ext}`;
 
-      const result = await storagePut(key, imageData, contentType);
-      res.json({ success: true, url: result.url, key: result.key });
+      // Production: upload to Manus CDN via Forge API
+      if (process.env.BUILT_IN_FORGE_API_URL) {
+        const result = await storagePut(`blog/${fileName}`, imageData, contentType);
+        res.json({ success: true, url: result.url, key: result.key });
+        return;
+      }
+
+      // Local fallback: save to client/public/blog-images/
+      const publicDir = path.resolve(import.meta.dirname, "../client/public/blog-images");
+      if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+      const filePath = path.join(publicDir, fileName);
+      fs.writeFileSync(filePath, imageData);
+      const localUrl = `/blog-images/${fileName}`;
+      console.log(`[Blog API] Saved image locally: ${filePath}`);
+      res.json({ success: true, url: localUrl, key: `blog/${fileName}` });
     } catch (err: any) {
       console.error("[Blog API] Image upload error:", err);
       res.status(500).json({ error: "Upload failed", details: err.message });

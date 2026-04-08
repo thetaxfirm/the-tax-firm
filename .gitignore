@@ -111,3 +111,6 @@ temp/
 
 # Blog sync state
 scripts/published.json
+
+# Local blog images (dev fallback)
+client/public/blog-images/
