@@ -206,8 +206,17 @@ function findImageForArticle(
   images: Array<{ kebab: string; id: string; name: string; mimeType: string }>,
   titleSlug: string,
 ): { id: string; name: string; mimeType: string } | null {
+  // Exact match
   for (const img of images) {
     if (img.kebab === titleSlug || img.kebab.endsWith(`-${titleSlug}`)) {
+      return img;
+    }
+  }
+  // Fuzzy match: strip hyphens to handle &, 's, and other special char differences
+  const normalized = titleSlug.replace(/-/g, "");
+  for (const img of images) {
+    const imgNorm = img.kebab.replace(/-/g, "");
+    if (imgNorm === normalized || imgNorm.endsWith(normalized)) {
       return img;
     }
   }
