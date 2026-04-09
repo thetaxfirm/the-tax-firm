@@ -158,9 +158,9 @@ function isSupportedFile(file: DriveFile): boolean {
  */
 async function uploadImageToCdn(fileId: string, slug: string, mimeType: string): Promise<string | null> {
   try {
-    // Download image bytes from Drive
-    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
-    const dlRes = await fetch(downloadUrl);
+    // Download image bytes from Drive via direct link
+    const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    const dlRes = await fetch(downloadUrl, { redirect: "follow" });
     if (!dlRes.ok) {
       console.error(`[upload] Drive download failed: ${dlRes.status} ${dlRes.statusText} for file ${fileId}`);
       return null;
