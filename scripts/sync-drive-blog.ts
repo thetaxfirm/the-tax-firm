@@ -161,7 +161,10 @@ async function uploadImageToCdn(fileId: string, slug: string, mimeType: string):
     // Download image bytes from Drive
     const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
     const dlRes = await fetch(downloadUrl);
-    if (!dlRes.ok) return null;
+    if (!dlRes.ok) {
+      console.error(`[upload] Drive download failed: ${dlRes.status} ${dlRes.statusText} for file ${fileId}`);
+      return null;
+    }
     const imageBuffer = Buffer.from(await dlRes.arrayBuffer());
 
     // Upload to CDN via Blog API
@@ -174,10 +177,15 @@ async function uploadImageToCdn(fileId: string, slug: string, mimeType: string):
       body: imageBuffer,
     });
 
-    if (!uploadRes.ok) return null;
+    if (!uploadRes.ok) {
+      const body = await uploadRes.text().catch(() => "");
+      console.error(`[upload] CDN upload failed: ${uploadRes.status} ${uploadRes.statusText} — ${body}`);
+      return null;
+    }
     const data = await uploadRes.json();
     return data.url || null;
-  } catch {
+  } catch (err) {
+    console.error(`[upload] Exception:`, err);
     return null;
   }
 }
