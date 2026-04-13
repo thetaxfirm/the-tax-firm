@@ -404,8 +404,21 @@ async function sync() {
 
       if (result.action === "created") created++;
       else updated++;
-    } catch (err) {
-      console.error(`[sync] Error processing ${file.name}:`, err);
+    } catch (err: any) {
+      const isApiError = err?.message?.includes("Blog API error: 500");
+      if (isApiError) {
+        // Mark as skipped so we don't retry every sync cycle
+        console.error(`[sync] Failed to publish "${title}" (API 500, marking as skipped)`);
+        published[file.id] = {
+          slug: `__skipped__`,
+          title,
+          modifiedTime: file.modifiedTime,
+          publishedAt: `skipped:${new Date().toISOString()}`,
+        };
+        skipped++;
+      } else {
+        console.error(`[sync] Error processing ${file.name}:`, err);
+      }
     }
   }
 
