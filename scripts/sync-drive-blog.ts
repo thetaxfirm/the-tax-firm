@@ -158,10 +158,13 @@ function isSupportedFile(file: DriveFile): boolean {
  */
 async function uploadImageToCdn(fileId: string, slug: string, mimeType: string): Promise<string | null> {
   try {
-    // Download image bytes from Drive
-    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
-    const dlRes = await fetch(downloadUrl);
-    if (!dlRes.ok) return null;
+    // Download image bytes from Drive via direct link
+    const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    const dlRes = await fetch(downloadUrl, { redirect: "follow" });
+    if (!dlRes.ok) {
+      console.error(`[upload] Drive download failed: ${dlRes.status} ${dlRes.statusText} for file ${fileId}`);
+      return null;
+    }
     const imageBuffer = Buffer.from(await dlRes.arrayBuffer());
 
     // Upload to CDN via Blog API
@@ -174,10 +177,15 @@ async function uploadImageToCdn(fileId: string, slug: string, mimeType: string):
       body: imageBuffer,
     });
 
-    if (!uploadRes.ok) return null;
+    if (!uploadRes.ok) {
+      const body = await uploadRes.text().catch(() => "");
+      console.error(`[upload] CDN upload failed: ${uploadRes.status} ${uploadRes.statusText} — ${body}`);
+      return null;
+    }
     const data = await uploadRes.json();
     return data.url || null;
-  } catch {
+  } catch (err) {
+    console.error(`[upload] Exception:`, err);
     return null;
   }
 }
@@ -206,8 +214,17 @@ function findImageForArticle(
   images: Array<{ kebab: string; id: string; name: string; mimeType: string }>,
   titleSlug: string,
 ): { id: string; name: string; mimeType: string } | null {
+  // Exact match
   for (const img of images) {
     if (img.kebab === titleSlug || img.kebab.endsWith(`-${titleSlug}`)) {
+      return img;
+    }
+  }
+  // Fuzzy match: strip hyphens to handle &, 's, and other special char differences
+  const normalized = titleSlug.replace(/-/g, "");
+  for (const img of images) {
+    const imgNorm = img.kebab.replace(/-/g, "");
+    if (imgNorm === normalized || imgNorm.endsWith(normalized)) {
       return img;
     }
   }
@@ -387,8 +404,21 @@ async function sync() {
 
       if (result.action === "created") created++;
       else updated++;
-    } catch (err) {
-      console.error(`[sync] Error processing ${file.name}:`, err);
+    } catch (err: any) {
+      const isApiError = err?.message?.includes("Blog API error: 500");
+      if (isApiError) {
+        // Mark as skipped so we don't retry every sync cycle
+        console.error(`[sync] Failed to publish "${title}" (API 500, marking as skipped)`);
+        published[file.id] = {
+          slug: `__skipped__`,
+          title,
+          modifiedTime: file.modifiedTime,
+          publishedAt: `skipped:${new Date().toISOString()}`,
+        };
+        skipped++;
+      } else {
+        console.error(`[sync] Error processing ${file.name}:`, err);
+      }
     }
   }
 
