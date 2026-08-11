@@ -114,3 +114,4 @@ scripts/published.json
 
 # Local blog images (dev fallback)
 client/public/blog-images/
+.project-config.json
