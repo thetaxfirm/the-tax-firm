@@ -38,15 +38,20 @@ async function startServer() {
     serveStatic(app);
   }
 
+  // In production (Railway/containers) PORT is injected and the platform routes
+  // to it exactly — bind directly on 0.0.0.0. Only fall back to port-scanning
+  // for local dev where the preferred port may be taken.
   const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
+  const port = process.env.PORT
+    ? preferredPort
+    : await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on http://0.0.0.0:${port}/`);
   });
 }
 

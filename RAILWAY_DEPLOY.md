@@ -59,8 +59,10 @@ External accounts you'll create: a **Google OAuth client** (sign-in) and an
 1. <https://railway.app> → **New Project → Deploy from GitHub repo** →
    `thetaxfirm/the-tax-firm`, branch `claude/project-context-y3h9vk` (or `main`
    once merged).
-2. In the service that Railway creates for the web app: **Settings → Build →**
-   set **Builder: Dockerfile** and **Dockerfile Path: `Dockerfile.web`**.
+2. The web app builds from the default **`Dockerfile`** (the repo's primary
+   service), which `railway.toml` already points to — no build settings to change.
+   *(The blog-sync worker is `Dockerfile.sync`; if you run it as a separate
+   service, set that service's Dockerfile path to `Dockerfile.sync`.)*
 3. Add a database: **New → Database → Add MySQL**. Railway creates it and exposes
    a connection string. Reference it from the web service as `DATABASE_URL`
    (use the private/internal URL Railway provides, or the public one for migrations).
@@ -156,7 +158,8 @@ Test on the temporary `*.up.railway.app` URL first, then cut the domain over.
 
 - The old Manus/Forge variables (`BUILT_IN_FORGE_*`, `VITE_FRONTEND_FORGE_*`,
   `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL`, `VITE_APP_ID`) are obsolete — don't set them.
-- The blog-sync worker (`Dockerfile`, `scripts/sync-drive-blog.ts`) is independent;
-  deploy it as a second Railway service only if you use the Google Drive → blog flow.
+- The blog-sync worker (`Dockerfile.sync`, `scripts/sync-drive-blog.ts`) is
+  independent; deploy it as a second Railway service (Dockerfile path
+  `Dockerfile.sync`) only if you use the Google Drive → blog flow.
 - Full variable reference: `ENV_TEMPLATE.md`.
 ```
