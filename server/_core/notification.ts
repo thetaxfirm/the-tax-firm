@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import { ENV } from "./env";
 
 export type NotificationPayload = {
   title: string;
@@ -12,16 +11,6 @@ const CONTENT_MAX_LENGTH = 20000;
 const trimValue = (value: string): string => value.trim();
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
-
-const buildEndpointUrl = (baseUrl: string): string => {
-  const normalizedBase = baseUrl.endsWith("/")
-    ? baseUrl
-    : `${baseUrl}/`;
-  return new URL(
-    "webdevtoken.v1.WebDevService/SendNotification",
-    normalizedBase
-  ).toString();
-};
 
 const validatePayload = (input: NotificationPayload): NotificationPayload => {
   if (!isNonEmptyString(input.title)) {
@@ -58,48 +47,63 @@ const validatePayload = (input: NotificationPayload): NotificationPayload => {
 };
 
 /**
- * Dispatches a project-owner notification through the Manus Notification Service.
- * Returns `true` if the request was accepted, `false` when the upstream service
- * cannot be reached (callers can fall back to email/slack). Validation errors
- * bubble up as TRPC errors so callers can fix the payload.
+ * Dispatches a project-owner notification by email through Resend
+ * (https://resend.com). Configuration:
+ *
+ *   RESEND_API_KEY    (required to send) Resend API key
+ *   NOTIFY_EMAIL_TO   recipient(s), comma-separated. Falls back to OWNER_EMAIL.
+ *   NOTIFY_EMAIL_FROM verified sender, e.g. "The Tax Firm <notify@thetaxfirm.us>".
+ *                     Falls back to "onboarding@resend.dev" for first-run testing.
+ *
+ * Returns `true` when the email was accepted, `false` when notifications are not
+ * configured or the upstream call fails. Callers treat a `false` result as a
+ * soft failure (the underlying action still succeeds). Validation errors on the
+ * payload itself bubble up as TRPC errors so callers can fix them.
  */
 export async function notifyOwner(
   payload: NotificationPayload
 ): Promise<boolean> {
   const { title, content } = validatePayload(payload);
 
-  if (!ENV.forgeApiUrl) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service URL is not configured.",
-    });
-  }
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = (process.env.NOTIFY_EMAIL_TO || process.env.OWNER_EMAIL || "")
+    .split(",")
+    .map((addr) => addr.trim())
+    .filter(Boolean);
+  const from =
+    process.env.NOTIFY_EMAIL_FROM || "The Tax Firm <onboarding@resend.dev>";
 
-  if (!ENV.forgeApiKey) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service API key is not configured.",
-    });
+  if (!apiKey || to.length === 0) {
+    console.warn(
+      "[Notification] Skipped: set RESEND_API_KEY and NOTIFY_EMAIL_TO (or OWNER_EMAIL) to enable owner notifications."
+    );
+    return false;
   }
-
-  const endpoint = buildEndpointUrl(ENV.forgeApiUrl);
 
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${ENV.forgeApiKey}`,
+        authorization: `Bearer ${apiKey}`,
         "content-type": "application/json",
-        "connect-protocol-version": "1",
       },
-      body: JSON.stringify({ title, content }),
+      body: JSON.stringify({
+        from,
+        to,
+        subject: title,
+        text: content,
+        html: `<div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6"><h2 style="margin:0 0 12px">${escapeHtml(
+          title
+        )}</h2><pre style="white-space:pre-wrap;font-family:inherit;margin:0">${escapeHtml(
+          content
+        )}</pre></div>`,
+      }),
     });
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       console.warn(
-        `[Notification] Failed to notify owner (${response.status} ${response.statusText})${
+        `[Notification] Failed to send owner email (${response.status} ${response.statusText})${
           detail ? `: ${detail}` : ""
         }`
       );
@@ -108,7 +112,15 @@ export async function notifyOwner(
 
     return true;
   } catch (error) {
-    console.warn("[Notification] Error calling notification service:", error);
+    console.warn("[Notification] Error calling email service:", error);
     return false;
   }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

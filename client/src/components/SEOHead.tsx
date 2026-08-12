@@ -19,7 +19,7 @@ export default function SEOHead({
   title,
   description,
   keywords,
-  image = "https://manus.storage.googleapis.com/the-tax-firm-og-default.jpg",
+  image = "/og-default.jpg",
   url,
   type = "website",
   author,

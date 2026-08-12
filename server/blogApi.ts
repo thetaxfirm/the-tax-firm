@@ -28,7 +28,7 @@ import {
   upsertBlogArticleBySlug,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
-import { storagePut } from "./storage";
+import { storagePut, isStorageConfigured } from "./storage";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -338,8 +338,8 @@ blogApiRouter.post(
       const slug = (req.query.slug as string) || "blog";
       const fileName = `${slug}_${hash}.${ext}`;
 
-      // Production: upload to Manus CDN via Forge API
-      if (process.env.BUILT_IN_FORGE_API_URL) {
+      // Production: upload to S3-compatible object storage (R2/S3)
+      if (isStorageConfigured()) {
         const result = await storagePut(`blog/${fileName}`, imageData, contentType);
         res.json({ success: true, url: result.url, key: result.key });
         return;
