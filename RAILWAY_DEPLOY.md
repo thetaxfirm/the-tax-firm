@@ -7,9 +7,9 @@ migration. Estimated time end-to-end: ~30–45 min, most of it one-time account 
 
 ```
 Railway project "the-tax-firm"
-├── Web service      → Dockerfile.web   → serves the site + API   → thetaxfirm.us
+├── Web service      → Dockerfile       → serves the site + API   → thetaxfirm.us
 ├── MySQL plugin     → provides DATABASE_URL
-└── (optional) Sync service → Dockerfile → Google Drive → blog sync worker
+└── (optional) Sync service → Dockerfile.sync → Google Drive → blog sync worker
 ```
 
 External accounts you'll create: a **Google OAuth client** (sign-in) and an
@@ -50,7 +50,7 @@ External accounts you'll create: a **Google OAuth client** (sign-in) and an
    - `S3_REGION` = `auto`
    - `S3_PUBLIC_URL` = the bucket's public URL (or custom domain)
 
-*(AWS S3 works identically — just omit `S3_ENDPOINT` and use a real region.)*
+_(AWS S3 works identically — just omit `S3_ENDPOINT` and use a real region.)_
 
 ---
 
@@ -61,8 +61,8 @@ External accounts you'll create: a **Google OAuth client** (sign-in) and an
    once merged).
 2. The web app builds from the default **`Dockerfile`** (the repo's primary
    service), which `railway.toml` already points to — no build settings to change.
-   *(The blog-sync worker is `Dockerfile.sync`; if you run it as a separate
-   service, set that service's Dockerfile path to `Dockerfile.sync`.)*
+   _(The blog-sync worker is `Dockerfile.sync`; if you run it as a separate
+   service, set that service's Dockerfile path to `Dockerfile.sync`.)_
 3. Add a database: **New → Database → Add MySQL**. Railway creates it and exposes
    a connection string. Reference it from the web service as `DATABASE_URL`
    (use the private/internal URL Railway provides, or the public one for migrations).
@@ -71,7 +71,7 @@ External accounts you'll create: a **Google OAuth client** (sign-in) and an
 
 ## Step 4 — Set environment variables on the web service
 
-Paste these into the web service's **Variables** tab. Values marked *(generated)*
+Paste these into the web service's **Variables** tab. Values marked _(generated)_
 were created for you; the rest come from Steps 1–2 and your existing keys.
 
 ```
@@ -107,7 +107,7 @@ NOTIFY_EMAIL_FROM     = The Tax Firm <notify@thetaxfirm.us>
 VITE_APP_TITLE        = The Tax Firm
 ```
 
-> **Important:** `VITE_GOOGLE_CLIENT_ID` must be set *before the build* — it is
+> **Important:** `VITE_GOOGLE_CLIENT_ID` must be set _before the build_ — it is
 > compiled into the client bundle. If you add it after the first build, trigger a
 > redeploy so it takes effect.
 
@@ -117,7 +117,7 @@ VITE_APP_TITLE        = The Tax Firm
 
 The MySQL database starts empty. Push the schema once:
 
-- **Option A (locally):** with the Railway MySQL *public* URL exported:
+- **Option A (locally):** with the Railway MySQL _public_ URL exported:
   ```bash
   DATABASE_URL='mysql://…public…' pnpm db:push
   ```
@@ -162,4 +162,7 @@ Test on the temporary `*.up.railway.app` URL first, then cut the domain over.
   independent; deploy it as a second Railway service (Dockerfile path
   `Dockerfile.sync`) only if you use the Google Drive → blog flow.
 - Full variable reference: `ENV_TEMPLATE.md`.
+
+```
+
 ```

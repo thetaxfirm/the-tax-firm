@@ -17,8 +17,8 @@
 //                         time-limited presigned URL is returned instead.
 //   S3_FORCE_PATH_STYLE   "true" to force path-style addressing (some providers)
 //
-// The public API (storagePut / storageGet) is unchanged from the previous
-// Manus-proxy implementation, so callers do not need to change.
+// storagePut / storageGet are the only entry points; callers stay unaware of
+// which provider is configured.
 
 import {
   DeleteObjectCommand,
@@ -131,9 +131,7 @@ export async function storageGet(
 export async function storageDelete(relKey: string): Promise<void> {
   const { bucket } = getConfig();
   const key = normalizeKey(relKey);
-  await getClient().send(
-    new DeleteObjectCommand({ Bucket: bucket, Key: key })
-  );
+  await getClient().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 
 /** True when object storage has the minimum required configuration. */

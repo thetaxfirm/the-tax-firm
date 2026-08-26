@@ -14,17 +14,18 @@ Use this document when working with Claude (or any AI assistant) to make updates
 
 ## Tech Stack
 
-| Layer | Technology | Notes |
-|-------|-----------|-------|
-| Frontend | React 19 + TypeScript | SPA with client-side routing via Wouter |
-| Styling | TailwindCSS 4 | Custom dark theme, glass-card utilities |
-| Animation | Framer Motion | Scroll-triggered animations, hover effects |
-| Backend | Express.js + tRPC 11 | Type-safe API, procedures in `server/routers.ts` |
-| Database | MySQL/TiDB + Drizzle ORM | Schema in `drizzle/schema.ts` |
-| Storage | AWS S3 | File uploads via `server/storage.ts` helpers |
-| Auth | Manus OAuth | Session cookies, `protectedProcedure` for auth |
-| Package Manager | pnpm 10 | Lockfile: `pnpm-lock.yaml` |
-| Testing | Vitest | Tests in `server/*.test.ts` |
+| Layer           | Technology                   | Notes                                                  |
+| --------------- | ---------------------------- | ------------------------------------------------------ |
+| Frontend        | React 19 + TypeScript        | SPA with client-side routing via Wouter                |
+| Styling         | TailwindCSS 4                | Custom dark theme, glass-card utilities                |
+| Animation       | Framer Motion                | Scroll-triggered animations, hover effects             |
+| Backend         | Express.js + tRPC 11         | Type-safe API, procedures in `server/routers.ts`       |
+| Database        | MySQL/TiDB + Drizzle ORM     | Schema in `drizzle/schema.ts`                          |
+| Storage         | S3-compatible (R2 / S3 / B2) | File uploads via `server/storage.ts` helpers           |
+| Auth            | Google OAuth 2.0             | HS256 session cookies, `protectedProcedure` for auth   |
+| Email           | Resend                       | Owner notifications via `server/_core/notification.ts` |
+| Package Manager | pnpm 10                      | Lockfile: `pnpm-lock.yaml`                             |
+| Testing         | Vitest                       | Tests in `server/*.test.ts`                            |
 
 ---
 
@@ -94,6 +95,7 @@ the-tax-firm/
 ## Coding Standards
 
 ### General Rules
+
 1. **TypeScript everywhere** — No `any` types. Use Zod for runtime validation.
 2. **tRPC for all API calls** — Never use raw fetch/axios from the frontend. Use `trpc.*.useQuery()` or `trpc.*.useMutation()`.
 3. **Drizzle ORM for database** — All queries go through `server/db.ts` helpers. Never write raw SQL in route handlers.
@@ -101,6 +103,7 @@ the-tax-firm/
 5. **Environment variables** — Access via `server/_core/env.ts`. Never hardcode secrets.
 
 ### Frontend Standards
+
 - Use **shadcn/ui** components from `@/components/ui/*` for consistent UI
 - Use **Framer Motion** for animations (scroll-triggered, hover, page transitions)
 - Use **Wouter** for routing (not React Router)
@@ -110,6 +113,7 @@ the-tax-firm/
 - Glass-morphism: `bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl`
 
 ### Backend Standards
+
 - Use `publicProcedure` for unauthenticated endpoints
 - Use `protectedProcedure` for logged-in user endpoints
 - Use `adminProcedure` for admin-only endpoints
@@ -118,6 +122,7 @@ the-tax-firm/
 - Use `notifyOwner()` for important events (new submissions, uploads)
 
 ### Database Standards
+
 - Schema changes: edit `drizzle/schema.ts` → run `pnpm db:push`
 - All timestamps as UTC milliseconds (bigint)
 - Use `text()` for variable-length strings, `varchar()` for fixed-length
@@ -125,6 +130,7 @@ the-tax-firm/
 - Soft delete preferred (status field) over hard delete
 
 ### Testing Standards
+
 - Test files: `server/*.test.ts`
 - Use Vitest with `describe/it/expect`
 - Test against the live dev server (not mocks) for integration tests
@@ -136,6 +142,7 @@ the-tax-firm/
 ## Common Tasks
 
 ### Adding a New Page
+
 1. Create `client/src/pages/NewPage.tsx`
 2. Add route in `client/src/App.tsx`
 3. Add navigation link in `Navbar.tsx` and/or `Footer.tsx`
@@ -143,6 +150,7 @@ the-tax-firm/
 5. Add `[ ]` item to `todo.md`
 
 ### Adding a New API Endpoint
+
 1. Add Zod schema + query helper in `server/db.ts`
 2. Add procedure in `server/routers.ts`
 3. Call from frontend with `trpc.newEndpoint.useQuery()` or `.useMutation()`
@@ -150,17 +158,20 @@ the-tax-firm/
 5. Run `pnpm test`
 
 ### Adding a New Database Table
+
 1. Define table in `drizzle/schema.ts`
 2. Run `pnpm db:push` to sync schema
 3. Add query helpers in `server/db.ts`
 4. Add tRPC procedures in `server/routers.ts`
 
 ### Adding a Blog Article (Static)
+
 1. Add article object to `client/src/data/blogPosts.ts`
 2. Follow the existing structure (slug, title, excerpt, content, category, readTime, author, date, image)
 3. Content uses markdown with pipe tables supported
 
 ### Adding a Blog Article (API)
+
 ```bash
 curl -X POST https://thetaxfirm.us/api/blog/articles \
   -H "Authorization: Bearer <BLOG_API_KEY>" \
@@ -172,13 +183,15 @@ curl -X POST https://thetaxfirm.us/api/blog/articles \
 
 ## External Integrations
 
-| Service | Purpose | Config |
-|---------|---------|--------|
-| GoHighLevel | CRM — auto-creates contacts from questionnaire | `GHL_API_KEY`, `GHL_LOCATION_ID` |
-| Calendly | Appointment scheduling (embedded) | Hardcoded URL: `https://calendly.com/chriscraig702` |
-| Tely.ai | Automated blog publishing | Uses `BLOG_API_KEY` via REST API |
-| Google Drive | Blog content sync | `DRIVE_FOLDER_ID`, `GOOGLE_API_KEY` |
-| AWS S3 | File storage (documents, images) | Configured via built-in forge API |
+| Service               | Purpose                                        | Config                                                                                  |
+| --------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------- |
+| GoHighLevel           | CRM — auto-creates contacts from questionnaire | `GHL_API_KEY`, `GHL_LOCATION_ID`                                                        |
+| Calendly              | Appointment scheduling (embedded)              | Hardcoded URL: `https://calendly.com/chriscraig702`                                     |
+| Tely.ai               | Automated blog publishing                      | Uses `BLOG_API_KEY` via REST API                                                        |
+| Google Drive          | Blog content sync                              | `DRIVE_FOLDER_ID`, `GOOGLE_API_KEY`                                                     |
+| S3-compatible storage | File storage (documents, images)               | `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`, `S3_PUBLIC_URL` |
+| Google OAuth          | Sign-in                                        | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `VITE_GOOGLE_CLIENT_ID`                     |
+| Resend                | Owner email notifications                      | `RESEND_API_KEY`, `NOTIFY_EMAIL_TO`, `NOTIFY_EMAIL_FROM`                                |
 
 ---
 
@@ -186,16 +199,16 @@ curl -X POST https://thetaxfirm.us/api/blog/articles \
 
 ```css
 /* Colors */
---midnight-navy: #0B1120;
---amber-gold: #D4A853;
---text-primary: #FFFFFF;
---text-secondary: #94A3B8;
+--midnight-navy: #0b1120;
+--amber-gold: #d4a853;
+--text-primary: #ffffff;
+--text-secondary: #94a3b8;
 --card-bg: rgba(255, 255, 255, 0.05);
 --card-border: rgba(255, 255, 255, 0.1);
 
 /* Typography */
---font-heading: 'DM Serif Display', serif;
---font-body: 'DM Sans', sans-serif;
+--font-heading: "DM Serif Display", serif;
+--font-body: "DM Sans", sans-serif;
 
 /* Spacing */
 --section-padding: 6rem 0;
@@ -210,11 +223,12 @@ curl -X POST https://thetaxfirm.us/api/blog/articles \
 
 ## Deployment
 
-| Platform | Method | Config File |
-|----------|--------|-------------|
-| Manus | Built-in (primary) | N/A — managed via UI |
-| Vercel | Import from GitHub | `vercel.json` |
-| Railway | Docker | `Dockerfile` + `railway.toml` |
+| Platform           | Method             | Entry point                            | Config File                   |
+| ------------------ | ------------------ | -------------------------------------- | ----------------------------- |
+| Vercel (primary)   | Import from GitHub | `api/index.ts` (serverless)            | `vercel.json`                 |
+| Railway (fallback) | Docker             | `server/_core/index.ts` (`pnpm start`) | `Dockerfile` + `railway.toml` |
+
+Both wrap the same host-agnostic `createApp()` from `server/_core/app.ts`.
 
 ---
 
@@ -255,4 +269,3 @@ pnpm test
 # 7. Build for production
 pnpm build && pnpm start
 ```
-

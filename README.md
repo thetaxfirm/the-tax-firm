@@ -7,13 +7,15 @@ A full-stack premium website for The Tax Firm (thetaxfirm.us), featuring a dark 
 - **Frontend:** React 19, TypeScript, TailwindCSS 4, Framer Motion, Wouter (routing)
 - **Backend:** Express.js, Node.js, tRPC 11
 - **Database:** MySQL/TiDB via Drizzle ORM
-- **Storage:** AWS S3 for file uploads
-- **Auth:** Manus OAuth (replaceable with any OAuth provider)
+- **Storage:** Any S3-compatible object store (Cloudflare R2, AWS S3, Backblaze B2, MinIO)
+- **Auth:** Google OAuth 2.0 + self-contained HS256 session cookies
+- **Email:** Resend (owner notifications)
 - **External Integrations:** Calendly, GoHighLevel CRM, Google Drive sync
 
 ## 🚀 Features
 
 ### Public Website
+
 - Premium dark luxury design (midnight navy #0B1120 + amber-gold #D4A853)
 - Animated hero with live statistics
 - Service pages: Tax Strategy, Fractional CFO, Bookkeeping
@@ -26,6 +28,7 @@ A full-stack premium website for The Tax Firm (thetaxfirm.us), featuring a dark 
 - Social media integration (Facebook, LinkedIn, Instagram)
 
 ### Client Portal
+
 - Secure login with session management
 - Document upload with progress bar and ETA
 - Engagement status tracking
@@ -33,6 +36,7 @@ A full-stack premium website for The Tax Firm (thetaxfirm.us), featuring a dark 
 - Admin management dashboard
 
 ### Blog/CMS System
+
 - Static articles + database-driven dynamic articles
 - REST API for external publishing (Tely.ai integration)
 - Google Drive sync for automated content publishing
@@ -40,6 +44,7 @@ A full-stack premium website for The Tax Firm (thetaxfirm.us), featuring a dark 
 - SEO: JSON-LD structured data, dynamic sitemap, Open Graph tags
 
 ### CRM Integration
+
 - Pre-booking questionnaire (9 questions)
 - Auto-creates contacts in GoHighLevel with smart tags
 - Admin dashboard for reviewing submissions
@@ -50,31 +55,38 @@ A full-stack premium website for The Tax Firm (thetaxfirm.us), featuring a dark 
 - Node.js 20+
 - pnpm 10+
 - MySQL/TiDB database
-- AWS S3 bucket (for file storage)
+- An S3-compatible bucket (for file storage)
+- A Google OAuth 2.0 client (for sign-in)
 
 ## 🔧 Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+[`ENV_TEMPLATE.md`](ENV_TEMPLATE.md) is the full reference. For local development,
+create a `.env` file in the root directory:
 
 ```env
 # Database
 DATABASE_URL=mysql://user:password@host:port/database
 
-# Authentication
-JWT_SECRET=your-jwt-secret
-VITE_APP_ID=your-app-id
-OAUTH_SERVER_URL=your-oauth-server-url
-VITE_OAUTH_PORTAL_URL=your-oauth-portal-url
+# Authentication — Google OAuth 2.0
+JWT_SECRET=a-long-random-string          # openssl rand -hex 32
+GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
+VITE_GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com   # same value, frontend
+GOOGLE_CLIENT_SECRET=GOCSPX-...
+ADMIN_EMAILS=chris@thetaxfirm.us         # comma-separated, granted the admin role
 
-# Owner Info
-OWNER_OPEN_ID=owner-open-id
+# Object storage (S3-compatible: R2, S3, B2, MinIO)
+S3_BUCKET=thetaxfirm-uploads
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com   # omit for AWS S3
+S3_REGION=auto
+S3_PUBLIC_URL=https://cdn.thetaxfirm.us
+
+# Owner notifications (Resend) — optional
+RESEND_API_KEY=re_...
+NOTIFY_EMAIL_TO=chris@thetaxfirm.us
+NOTIFY_EMAIL_FROM=The Tax Firm <notify@thetaxfirm.us>
 OWNER_NAME=Christopher Craig
-
-# Built-in APIs (LLM, Storage, Notifications)
-BUILT_IN_FORGE_API_URL=your-forge-api-url
-BUILT_IN_FORGE_API_KEY=your-forge-api-key
-VITE_FRONTEND_FORGE_API_KEY=your-frontend-forge-key
-VITE_FRONTEND_FORGE_API_URL=your-frontend-forge-url
 
 # GoHighLevel CRM
 GHL_API_KEY=your-ghl-api-key
@@ -91,6 +103,9 @@ VITE_APP_LOGO=your-logo-url
 VITE_ANALYTICS_ENDPOINT=your-analytics-endpoint
 VITE_ANALYTICS_WEBSITE_ID=your-analytics-id
 ```
+
+Google OAuth needs an **Authorized redirect URI** of `<origin>/api/oauth/callback`
+for every domain the app runs on, including `http://localhost:3000/api/oauth/callback`.
 
 ## 🏃 Local Development
 
@@ -119,25 +134,41 @@ pnpm start
 
 ## 🚀 Deployment Options
 
-### Option 1: Manus (Current - Recommended)
-The site is currently hosted on Manus at thetaxfirm.us with built-in hosting, SSL, and custom domain support.
+The app is host-agnostic: `server/_core/app.ts` exports `createApp()`, which
+builds the Express app with every API route but binds no port and serves no
+static files. Each host wraps it:
 
-### Option 2: Vercel
-1. Push code to GitHub
-2. Import the repository in Vercel
-3. Set all environment variables in Vercel's dashboard
-4. Vercel will auto-detect the `vercel.json` configuration
-5. Deploy
+| Host                    | Entry point                                               | Serves the client from           |
+| ----------------------- | --------------------------------------------------------- | -------------------------------- |
+| Vercel                  | `api/index.ts` (exports the app as a serverless function) | Vercel's CDN, from `dist/public` |
+| Railway / any container | `server/_core/index.ts` (`pnpm start`)                    | `express.static(dist/public)`    |
 
-### Option 3: Railway / Render / Fly.io
-Use the included `Dockerfile` for containerized deployment:
+### Option 1: Vercel (primary)
+
+1. Push code to GitHub and import the repository in Vercel.
+2. Set the environment variables from [`VERCEL_ENV_VARS.txt`](VERCEL_ENV_VARS.txt)
+   in Project Settings → Environment Variables. `VITE_*` values are baked into
+   the client bundle at build time, so they must be set before the first deploy.
+3. Vercel picks up `vercel.json`: `pnpm build` produces the client into
+   `dist/public` (the output directory) and `api/index.ts` is deployed as the
+   single Node function that answers `/api/*`. Everything else falls back to
+   `index.html` for client-side routing.
+4. Deploy.
+
+### Option 2: Railway / Render / Fly.io
+
+Use the included `Dockerfile` for containerized deployment — see
+[`RAILWAY_DEPLOY.md`](RAILWAY_DEPLOY.md) for the full runbook.
+
 ```bash
 docker build -t the-tax-firm .
 docker run -p 3000:3000 --env-file .env the-tax-firm
 ```
 
-### Option 4: Claude / AI-Assisted Development
+### Option 3: Claude / AI-Assisted Development
+
 This codebase is structured for AI-assisted development:
+
 - Clear file organization with descriptive names
 - TypeScript throughout for type safety
 - tRPC for end-to-end type-safe API calls
@@ -145,6 +176,7 @@ This codebase is structured for AI-assisted development:
 - `todo.md` tracks all features and their completion status
 
 To work with Claude or another AI assistant:
+
 1. Clone the repository
 2. Share the README and relevant files for context
 3. The AI can modify, extend, or debug any part of the codebase
@@ -162,18 +194,25 @@ To work with Claude or another AI assistant:
 │   │   ├── lib/             # Utilities (tRPC client)
 │   │   └── _core/           # Auth hooks
 │   └── index.html           # HTML entry point
+├── api/                     # Vercel serverless entry (wraps createApp())
 ├── server/                  # Backend (Express + tRPC)
-│   ├── _core/               # Framework plumbing (OAuth, context, etc.)
+│   ├── _core/
+│   │   ├── app.ts           # createApp() — host-agnostic Express app
+│   │   ├── index.ts         # Long-running entry (port + static files)
+│   │   ├── googleAuth.ts    # Google OAuth code exchange + id_token verify
+│   │   └── ...              # Context, tRPC, cookies, sitemap, migrations
 │   ├── routers.ts           # tRPC procedures
 │   ├── db.ts                # Database query helpers
 │   ├── blogApi.ts           # REST API for blog publishing
 │   ├── ghl.ts               # GoHighLevel CRM integration
-│   └── storage.ts           # S3 file storage helpers
+│   └── storage.ts           # S3-compatible object storage helpers
 ├── drizzle/                 # Database schema & migrations
 ├── scripts/                 # Utility scripts (sitemap, Drive sync)
 ├── shared/                  # Shared types & constants
-├── Dockerfile               # Container deployment
+├── Dockerfile               # Container deployment (web app)
+├── Dockerfile.sync          # Container for the Google Drive blog-sync worker
 ├── vercel.json              # Vercel deployment config
+├── ENV_TEMPLATE.md          # Environment variable reference
 └── todo.md                  # Feature tracking
 ```
 
