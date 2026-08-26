@@ -1,8 +1,35 @@
 import { describe, it, expect, afterAll } from "vitest";
 
-const BASE = "http://localhost:3000/api/blog";
+/**
+ * End-to-end tests for the blog REST API. They drive a *running* server and a
+ * real database, so they are skipped unless one is reachable and BLOG_API_KEY
+ * is set — point BLOG_API_BASE_URL at a deployment to run them elsewhere.
+ * Routing for the same endpoints is covered without those dependencies in
+ * server/app.test.ts.
+ */
+const BASE = process.env.BLOG_API_BASE_URL ?? "http://localhost:3000/api/blog";
 const API_KEY = process.env.BLOG_API_KEY!;
 const TEST_SLUG = `vitest-blog-api-${Date.now()}`;
+
+async function isServerReachable(): Promise<boolean> {
+  try {
+    await fetch(`${BASE}/articles`, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(2000),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const canRun = Boolean(API_KEY) && (await isServerReachable());
+
+if (!canRun) {
+  console.warn(
+    `[blogApi.test] Skipping live blog API tests: no server reachable at ${BASE} (or BLOG_API_KEY unset).`
+  );
+}
 
 // Track created articles for cleanup
 const createdSlugs: string[] = [];
@@ -15,12 +42,13 @@ async function deleteArticle(slug: string) {
 }
 
 afterAll(async () => {
+  if (!canRun) return;
   for (const slug of createdSlugs) {
     await deleteArticle(slug).catch(() => {});
   }
 });
 
-describe("Blog API", () => {
+describe.skipIf(!canRun)("Blog API", () => {
   describe("Authentication", () => {
     it("rejects POST without Authorization header", async () => {
       const res = await fetch(`${BASE}/articles`, {
@@ -252,14 +280,17 @@ describe("Blog API", () => {
     });
 
     it("returns 404 for non-existent article", async () => {
-      const res = await fetch(`${BASE}/articles/definitely-does-not-exist-xyz`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({ title: "Updated" }),
-      });
+      const res = await fetch(
+        `${BASE}/articles/definitely-does-not-exist-xyz`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${API_KEY}`,
+          },
+          body: JSON.stringify({ title: "Updated" }),
+        }
+      );
       expect(res.status).toBe(404);
     });
 
