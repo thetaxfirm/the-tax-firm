@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-describe("GoHighLevel API credentials", () => {
+/**
+ * Live smoke tests for the GoHighLevel CRM credentials. They call the real GHL
+ * API, so they only run where those credentials are configured (CI with the
+ * secrets set, or a local .env) and are skipped otherwise.
+ */
+const hasCredentials = Boolean(
+  process.env.GHL_API_KEY && process.env.GHL_LOCATION_ID
+);
+
+if (!hasCredentials) {
+  console.warn(
+    "[ghl.test] Skipping GoHighLevel tests: set GHL_API_KEY and GHL_LOCATION_ID to run them."
+  );
+}
+
+describe.skipIf(!hasCredentials)("GoHighLevel API credentials", () => {
   it("should have GHL_API_KEY environment variable set", () => {
     const apiKey = process.env.GHL_API_KEY;
     expect(apiKey).toBeDefined();
@@ -17,10 +32,6 @@ describe("GoHighLevel API credentials", () => {
 
   it("should be able to reach the GHL API", async () => {
     const apiKey = process.env.GHL_API_KEY;
-    if (!apiKey) {
-      console.warn("Skipping GHL API test: no API key set");
-      return;
-    }
 
     // Test with a lightweight GET request to search contacts (empty search)
     const response = await fetch(
