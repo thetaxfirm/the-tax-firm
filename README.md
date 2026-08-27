@@ -132,40 +132,41 @@ pnpm build
 pnpm start
 ```
 
-## 🚀 Deployment Options
+## 🚀 Deployment
 
-The app is host-agnostic: `server/_core/app.ts` exports `createApp()`, which
-builds the Express app with every API route but binds no port and serves no
-static files. Each host wraps it:
+**Railway is the production host.** The app runs there as a persistent
+Express + tRPC server — one long-lived process that serves both the API and the
+built client — with an optional second service for the Google Drive blog-sync
+worker. There is no serverless deployment path.
 
-| Host                    | Entry point                                               | Serves the client from           |
-| ----------------------- | --------------------------------------------------------- | -------------------------------- |
-| Vercel                  | `api/index.ts` (exports the app as a serverless function) | Vercel's CDN, from `dist/public` |
-| Railway / any container | `server/_core/index.ts` (`pnpm start`)                    | `express.static(dist/public)`    |
+| Railway service   | Built from        | Command                | Role                                  |
+| ----------------- | ----------------- | ---------------------- | ------------------------------------- |
+| Web (required)    | `Dockerfile`      | `pnpm start`           | Serves the site + API on `$PORT`      |
+| Sync (optional)   | `Dockerfile.sync` | `pnpm sync:blog:serve` | Google Drive → blog article sync      |
+| MySQL plugin      | —                 | —                      | Provides `DATABASE_URL`               |
 
-### Option 1: Vercel (primary)
+`railway.toml` points the web service at `Dockerfile`. Railway applies that
+root config to every service, so the sync service must override it — point its
+**Settings → Config as code** at `railway.sync.toml`, which selects
+`Dockerfile.sync`.
 
-1. Push code to GitHub and import the repository in Vercel.
-2. Set the environment variables from [`VERCEL_ENV_VARS.txt`](VERCEL_ENV_VARS.txt)
-   in Project Settings → Environment Variables. `VITE_*` values are baked into
-   the client bundle at build time, so they must be set before the first deploy.
-3. Vercel picks up `vercel.json`: `pnpm build` produces the client into
-   `dist/public` (the output directory) and `api/index.ts` is deployed as the
-   single Node function that answers `/api/*`. Everything else falls back to
-   `index.html` for client-side routing.
-4. Deploy.
+Internally the server is split so the app itself owns no hosting concerns:
+`server/_core/app.ts` exports `createApp()`, which builds the Express app with
+every API route but binds no port and serves no static files;
+`server/_core/index.ts` wraps it — running pending database migrations, serving
+`dist/public`, and binding `0.0.0.0:$PORT`.
 
-### Option 2: Railway / Render / Fly.io
+See [`RAILWAY_DEPLOY.md`](RAILWAY_DEPLOY.md) for the full runbook (Google OAuth
+client, R2 bucket, environment variables, schema push, domain cutover).
 
-Use the included `Dockerfile` for containerized deployment — see
-[`RAILWAY_DEPLOY.md`](RAILWAY_DEPLOY.md) for the full runbook.
+To run the production image locally:
 
 ```bash
 docker build -t the-tax-firm .
 docker run -p 3000:3000 --env-file .env the-tax-firm
 ```
 
-### Option 3: Claude / AI-Assisted Development
+### Working with Claude / AI assistants
 
 This codebase is structured for AI-assisted development:
 
@@ -194,11 +195,10 @@ To work with Claude or another AI assistant:
 │   │   ├── lib/             # Utilities (tRPC client)
 │   │   └── _core/           # Auth hooks
 │   └── index.html           # HTML entry point
-├── api/                     # Vercel serverless entry (wraps createApp())
 ├── server/                  # Backend (Express + tRPC)
 │   ├── _core/
-│   │   ├── app.ts           # createApp() — host-agnostic Express app
-│   │   ├── index.ts         # Long-running entry (port + static files)
+│   │   ├── app.ts           # createApp() — routes only, no host concerns
+│   │   ├── index.ts         # Production entry (migrations, static, $PORT)
 │   │   ├── googleAuth.ts    # Google OAuth code exchange + id_token verify
 │   │   └── ...              # Context, tRPC, cookies, sitemap, migrations
 │   ├── routers.ts           # tRPC procedures
@@ -209,10 +209,12 @@ To work with Claude or another AI assistant:
 ├── drizzle/                 # Database schema & migrations
 ├── scripts/                 # Utility scripts (sitemap, Drive sync)
 ├── shared/                  # Shared types & constants
-├── Dockerfile               # Container deployment (web app)
-├── Dockerfile.sync          # Container for the Google Drive blog-sync worker
-├── vercel.json              # Vercel deployment config
+├── Dockerfile               # Railway web service (Express + built client)
+├── Dockerfile.sync          # Railway sync worker (Google Drive → blog)
+├── railway.toml             # Railway config for the web service
+├── railway.sync.toml        # Railway config for the sync worker service
 ├── ENV_TEMPLATE.md          # Environment variable reference
+├── RAILWAY_DEPLOY.md        # Deployment runbook
 └── todo.md                  # Feature tracking
 ```
 

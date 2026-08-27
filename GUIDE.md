@@ -156,9 +156,8 @@ curl -X POST https://<railway-url>/published/seed \
 
 - The Blog API used to return HTML instead of JSON on `thetaxfirm.us`, because the
   site was served as a static build with no Express server behind it. That is
-  resolved: the API now runs as a Vercel serverless function (`api/index.ts`),
-  with the Railway container as a fallback. Both serve `/api/blog/*` from the
-  same `createApp()`.
+  resolved: the site now runs as a persistent Express server on Railway, so
+  `/api/blog/*` is served by the same process that serves the pages.
 
 ## Local Development
 

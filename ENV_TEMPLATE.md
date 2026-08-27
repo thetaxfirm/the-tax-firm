@@ -1,6 +1,6 @@
 # Environment Variables
 
-Set these in your hosting provider's environment panel (Vercel / Railway / Render).
+Set these in the Railway service's **Variables** tab (see `RAILWAY_DEPLOY.md`).
 `VITE_`-prefixed variables are baked into the frontend bundle at build time; all
 others are server-only. Never commit real values to git.
 
@@ -55,10 +55,11 @@ If unset, the underlying actions still succeed — the notification is simply sk
 
 ## Notes
 
-- The app no longer depends on any Manus / "Forge" service. `BUILT_IN_FORGE_*`,
-  `VITE_FRONTEND_FORGE_*`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL`, and
-  `VITE_APP_ID` are read by no code and can be deleted from your hosting
-  provider whenever convenient — leaving them set does no harm.
+- The app no longer depends on any Manus / "Forge" service, and no longer
+  deploys to Vercel. `BUILT_IN_FORGE_*`, `VITE_FRONTEND_FORGE_*`,
+  `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL`, and `VITE_APP_ID` are read by no
+  code and can be deleted from Railway whenever convenient — leaving them set
+  does no harm.
 - `OWNER_OPEN_ID` still works (it grants the `admin` role to one openId), but
   openIds are now `google:<sub>`, so a value carried over from Manus will never
   match. Prefer `ADMIN_EMAILS`.

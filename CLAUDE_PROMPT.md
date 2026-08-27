@@ -84,9 +84,10 @@ the-tax-firm/
 │   └── sync-drive-blog.ts            # Google Drive → blog sync script
 ├── shared/
 │   └── const.ts                       # Shared constants
-├── Dockerfile                         # Container deployment (Railway)
-├── vercel.json                        # Vercel deployment config
-├── railway.toml                       # Railway deployment config
+├── Dockerfile                         # Railway web service (Express + client)
+├── Dockerfile.sync                    # Railway sync worker (Drive → blog)
+├── railway.toml                       # Railway config — web service
+├── railway.sync.toml                  # Railway config — sync worker service
 └── todo.md                            # Feature tracking (checkbox format)
 ```
 
@@ -223,12 +224,18 @@ curl -X POST https://thetaxfirm.us/api/blog/articles \
 
 ## Deployment
 
-| Platform           | Method             | Entry point                            | Config File                   |
-| ------------------ | ------------------ | -------------------------------------- | ----------------------------- |
-| Vercel (primary)   | Import from GitHub | `api/index.ts` (serverless)            | `vercel.json`                 |
-| Railway (fallback) | Docker             | `server/_core/index.ts` (`pnpm start`) | `Dockerfile` + `railway.toml` |
+**Railway is the only production host.** The app is a persistent Express + tRPC
+server, not a serverless function — there is no Vercel or Manus deploy path.
 
-Both wrap the same host-agnostic `createApp()` from `server/_core/app.ts`.
+| Railway service | Built from        | Command                | Config              |
+| --------------- | ----------------- | ---------------------- | ------------------- |
+| Web (required)  | `Dockerfile`      | `pnpm start`           | `railway.toml`      |
+| Sync (optional) | `Dockerfile.sync` | `pnpm sync:blog:serve` | `railway.sync.toml` |
+
+`server/_core/app.ts` exports `createApp()` — routes only, no port and no static
+files. `server/_core/index.ts` is the production entry: it runs pending
+migrations, serves `dist/public`, and binds `0.0.0.0:$PORT`. Runbook:
+`RAILWAY_DEPLOY.md`.
 
 ---
 
@@ -255,7 +262,7 @@ cd the-tax-firm
 pnpm install
 
 # 3. Set up environment variables (get values from team lead)
-# Copy from VERCEL_ENV_VARS.txt and create .env file
+# See ENV_TEMPLATE.md for the full reference; create a .env file
 
 # 4. Push database schema
 pnpm db:push

@@ -1,7 +1,8 @@
 # Deploying The Tax Firm to Railway
 
-This is the full runbook for launching the site on Railway after the Manus
-migration. Estimated time end-to-end: ~30–45 min, most of it one-time account setup.
+This is the full runbook for launching the site on Railway. **Railway is the
+single production host** — the site no longer deploys to Manus or Vercel.
+Estimated time end-to-end: ~30–45 min, most of it one-time account setup.
 
 ## Architecture
 
@@ -11,6 +12,12 @@ Railway project "the-tax-firm"
 ├── MySQL plugin     → provides DATABASE_URL
 └── (optional) Sync service → Dockerfile.sync → Google Drive → blog sync worker
 ```
+
+The web service is one long-lived Node process (`pnpm start` →
+`server/_core/index.ts`). On boot it applies any pending database migrations,
+serves the built client from `dist/public`, and binds `0.0.0.0:$PORT` using the
+port Railway injects. Migrations are idempotent — drizzle records applied ones
+in a `__drizzle_migrations` table — so restarts and redeploys are safe.
 
 External accounts you'll create: a **Google OAuth client** (sign-in) and an
 **S3-compatible bucket** (Cloudflare R2 recommended, for uploads).
@@ -57,12 +64,15 @@ _(AWS S3 works identically — just omit `S3_ENDPOINT` and use a real region.)_
 ## Step 3 — Railway project + MySQL
 
 1. <https://railway.app> → **New Project → Deploy from GitHub repo** →
-   `thetaxfirm/the-tax-firm`, branch `claude/project-context-y3h9vk` (or `main`
-   once merged).
-2. The web app builds from the default **`Dockerfile`** (the repo's primary
-   service), which `railway.toml` already points to — no build settings to change.
-   _(The blog-sync worker is `Dockerfile.sync`; if you run it as a separate
-   service, set that service's Dockerfile path to `Dockerfile.sync`.)_
+   `thetaxfirm/the-tax-firm`, branch `main`.
+2. The web app builds from **`Dockerfile`**, which `railway.toml` already points
+   to — no build settings to change.
+
+   > Railway applies the repo-root `railway.toml` to **every** service in the
+   > project. If you also run the blog-sync worker, that service must override
+   > it: **Settings → Config as code** → `railway.sync.toml`, which selects
+   > `Dockerfile.sync`. Without that override the worker service would build the
+   > web app instead.
 3. Add a database: **New → Database → Add MySQL**. Railway creates it and exposes
    a connection string. Reference it from the web service as `DATABASE_URL`
    (use the private/internal URL Railway provides, or the public one for migrations).
@@ -159,9 +169,23 @@ Test on the temporary `*.up.railway.app` URL first, then cut the domain over.
 - The old Manus/Forge variables (`BUILT_IN_FORGE_*`, `VITE_FRONTEND_FORGE_*`,
   `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL`, `VITE_APP_ID`) are obsolete — don't set them.
 - The blog-sync worker (`Dockerfile.sync`, `scripts/sync-drive-blog.ts`) is
-  independent; deploy it as a second Railway service (Dockerfile path
-  `Dockerfile.sync`) only if you use the Google Drive → blog flow.
+  independent; deploy it as a second Railway service (config as code →
+  `railway.sync.toml`) only if you use the Google Drive → blog flow.
 - Full variable reference: `ENV_TEMPLATE.md`.
+
+---
+
+## Decommissioning Vercel
+
+The repo no longer contains `vercel.json` or any serverless entry point, so the
+Vercel project can no longer build this app. Once Railway is serving
+`thetaxfirm.us`:
+
+1. Confirm the Railway deploy answers on the custom domain (Step 7).
+2. Delete the Vercel project (or at minimum disconnect the GitHub integration so
+   it stops attempting a build on every push).
+3. The Vercel-only environment variables disappear with the project; nothing in
+   this repo reads them.
 
 ```
 

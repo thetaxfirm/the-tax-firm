@@ -1,10 +1,10 @@
 /**
  * Smoke tests for the host-agnostic Express app returned by createApp().
  *
- * This is the exact app the Vercel serverless entry (api/index.ts) exports and
- * the container entrypoint (server/_core/index.ts) listens with, so these
- * assertions cover routing for both deploy targets. They deliberately exercise
- * only paths that short-circuit before any database or third-party call.
+ * This is the exact app the Railway container entrypoint
+ * (server/_core/index.ts) listens with, so these assertions cover the routes
+ * production serves. They deliberately exercise only paths that short-circuit
+ * before any database or third-party call.
  */
 import type { Server } from "http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -76,7 +76,7 @@ describe("createApp routing", () => {
     expect(body.error?.json?.data?.code).toBe("NOT_FOUND");
   });
 
-  it("does not serve static assets — that is the host's job", async () => {
+  it("does not serve static assets — the entrypoint adds that", async () => {
     const res = await fetch(`${baseUrl}/index.html`);
     expect(res.status).toBe(404);
   });

@@ -1,5 +1,5 @@
 # Web app (Express + React SPA) for Railway.
-# The blog-sync worker uses the separate ./Dockerfile.
+# The blog-sync worker is a separate Railway service built from ./Dockerfile.sync.
 #
 # NOTE: VITE_* variables are compiled into the client bundle during `pnpm build`,
 # so they must be present at BUILD time. Railway exposes a service's variables to
