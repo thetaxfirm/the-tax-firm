@@ -11,13 +11,10 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 
-# Build-time (baked into the frontend bundle).
+# Build-time (baked into the frontend bundle). VITE_GOOGLE_CLIENT_ID is the only
+# VITE_* variable the client reads — see `import.meta.env` usage in client/src.
 ARG VITE_GOOGLE_CLIENT_ID
-ARG VITE_APP_TITLE="The Tax Firm"
-ARG VITE_APP_LOGO
-ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
-    VITE_APP_TITLE=$VITE_APP_TITLE \
-    VITE_APP_LOGO=$VITE_APP_LOGO
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 # Install dependencies (dev deps included — needed to build).
 COPY package.json pnpm-lock.yaml ./

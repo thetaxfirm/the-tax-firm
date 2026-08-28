@@ -46,12 +46,9 @@ If unset, the underlying actions still succeed — the notification is simply sk
 
 ## Optional
 
-| Variable         | Description                      | Default             |
-| ---------------- | -------------------------------- | ------------------- |
-| `PORT`           | Server port (long-running hosts) | `3000`              |
-| `VITE_APP_TITLE` | Site title                       | `The Tax Firm`      |
-| `VITE_APP_LOGO`  | Logo URL                         | —                   |
-| `OWNER_NAME`     | Owner display name               | `Christopher Craig` |
+| Variable | Description                                        | Default |
+| -------- | -------------------------------------------------- | ------- |
+| `PORT`   | Server port. Railway injects this; do not set it.  | `3000`  |
 
 ## Notes
 
@@ -63,6 +60,10 @@ If unset, the underlying actions still succeed — the notification is simply sk
 - `OWNER_OPEN_ID` still works (it grants the `admin` role to one openId), but
   openIds are now `google:<sub>`, so a value carried over from Manus will never
   match. Prefer `ADMIN_EMAILS`.
+- `VITE_GOOGLE_CLIENT_ID` is the **only** `VITE_*` variable the client reads.
+  Earlier revisions of this file also listed `VITE_APP_TITLE`, `VITE_APP_LOGO`,
+  `OWNER_NAME` and `VITE_ANALYTICS_*`; no code reads any of them, so setting them
+  does nothing. The page title and metadata live in `client/index.html`.
 - Google OAuth requires an **Authorized redirect URI** of
   `https://YOUR_DOMAIN/api/oauth/callback` (add one per domain, including any
   preview/staging domain and `http://localhost:3000/api/oauth/callback` for local dev).

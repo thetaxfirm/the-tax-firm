@@ -112,10 +112,11 @@ S3_PUBLIC_URL         = <bucket public URL>
 RESEND_API_KEY        = <resend.com key>
 NOTIFY_EMAIL_TO       = chris@thetaxfirm.us
 NOTIFY_EMAIL_FROM     = The Tax Firm <notify@thetaxfirm.us>
-
-# Branding (optional)
-VITE_APP_TITLE        = The Tax Firm
+OWNER_EMAIL           = chris@thetaxfirm.us
 ```
+
+That is the complete set. `VITE_GOOGLE_CLIENT_ID` is the only `VITE_*` variable
+the client reads — there is nothing to configure for branding or analytics.
 
 > **Important:** `VITE_GOOGLE_CLIENT_ID` must be set _before the build_ — it is
 > compiled into the client bundle. If you add it after the first build, trigger a

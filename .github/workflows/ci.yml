@@ -42,11 +42,9 @@ jobs:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-      OWNER_NAME: ${{ secrets.OWNER_NAME }}
       GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
       GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID }}
       BLOG_API_KEY: ${{ secrets.BLOG_API_KEY }}
-      VITE_APP_TITLE: The Tax Firm
     steps:
       - uses: actions/checkout@v4
 
@@ -92,9 +90,6 @@ jobs:
         run: pnpm build
         env:
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-          VITE_APP_TITLE: The Tax Firm
-          VITE_ANALYTICS_ENDPOINT: ${{ secrets.VITE_ANALYTICS_ENDPOINT }}
-          VITE_ANALYTICS_WEBSITE_ID: ${{ secrets.VITE_ANALYTICS_WEBSITE_ID }}
 
       - name: Assert the build produced what `pnpm start` serves
         run: |

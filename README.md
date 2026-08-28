@@ -86,7 +86,7 @@ S3_PUBLIC_URL=https://cdn.thetaxfirm.us
 RESEND_API_KEY=re_...
 NOTIFY_EMAIL_TO=chris@thetaxfirm.us
 NOTIFY_EMAIL_FROM=The Tax Firm <notify@thetaxfirm.us>
-OWNER_NAME=Christopher Craig
+OWNER_EMAIL=chris@thetaxfirm.us
 
 # GoHighLevel CRM
 GHL_API_KEY=your-ghl-api-key
@@ -94,15 +94,10 @@ GHL_LOCATION_ID=hf2fpQyPswcNJOmnqRFR
 
 # Blog API (for external publishing)
 BLOG_API_KEY=your-blog-api-key
-
-# App Branding
-VITE_APP_TITLE=The Tax Firm
-VITE_APP_LOGO=your-logo-url
-
-# Analytics (optional)
-VITE_ANALYTICS_ENDPOINT=your-analytics-endpoint
-VITE_ANALYTICS_WEBSITE_ID=your-analytics-id
 ```
+
+`VITE_GOOGLE_CLIENT_ID` is the only `VITE_*` variable the client reads; the page
+title and metadata are in `client/index.html`.
 
 Google OAuth needs an **Authorized redirect URI** of `<origin>/api/oauth/callback`
 for every domain the app runs on, including `http://localhost:3000/api/oauth/callback`.
