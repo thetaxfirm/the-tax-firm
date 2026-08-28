@@ -1,14 +1,9 @@
 import "dotenv/config";
-import express from "express";
 import { createServer } from "http";
 import net from "net";
-import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
-import { appRouter } from "../routers";
-import { createContext } from "./context";
+import { createApp } from "./app";
+import { runMigrations } from "./migrate";
 import { serveStatic, setupVite } from "./vite";
-import { blogApiRouter } from "../blogApi";
-import { generateSitemapXml } from "./sitemap";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -30,51 +25,33 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
-  const app = express();
-  const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // Dynamic sitemap (always fresh from DB)
-  app.get("/sitemap.xml", async (_req, res) => {
-    try {
-      const xml = await generateSitemapXml();
-      res.set("Content-Type", "application/xml");
-      res.send(xml);
-    } catch (err) {
-      console.error("[sitemap] Error:", err);
-      res.status(500).send("Sitemap generation failed");
-    }
-  });
+  // Apply any pending database migrations before serving traffic.
+  await runMigrations();
 
-  // OAuth callback under /api/oauth/callback
-  registerOAuthRoutes(app);
-  // Blog REST API for external publishing (Tely.ai, etc.)
-  app.use("/api/blog", blogApiRouter);
-  // tRPC API
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    })
-  );
-  // development mode uses Vite, production mode uses static files
+  const app = createApp();
+  const server = createServer(app);
+
+  // development mode uses Vite, production mode serves the built static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
+  // In production (Railway/containers) PORT is injected and the platform routes
+  // to it exactly — bind directly on 0.0.0.0. Only fall back to port-scanning
+  // for local dev where the preferred port may be taken.
   const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
+  const port = process.env.PORT
+    ? preferredPort
+    : await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on http://0.0.0.0:${port}/`);
   });
 }
 

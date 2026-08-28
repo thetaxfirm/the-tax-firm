@@ -1,39 +1,69 @@
-# Environment Variables Template
+# Environment Variables
 
-Copy these into your hosting provider's environment variables panel (Vercel, Railway, etc.)
+Set these in the Railway service's **Variables** tab (see `RAILWAY_DEPLOY.md`).
+`VITE_`-prefixed variables are baked into the frontend bundle at build time; all
+others are server-only. Never commit real values to git.
 
-## Required Variables
+## Required
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | MySQL/TiDB connection string | `mysql://user:pass@host:port/db?ssl={"rejectUnauthorized":true}` |
-| `JWT_SECRET` | Secret for signing session cookies | `your-random-secret-string` |
-| `VITE_APP_ID` | OAuth application ID | `app-id-from-provider` |
-| `OAUTH_SERVER_URL` | OAuth backend base URL | `https://oauth.provider.com` |
-| `VITE_OAUTH_PORTAL_URL` | OAuth login portal URL (frontend) | `https://login.provider.com` |
-| `OWNER_OPEN_ID` | Owner's OAuth ID | `user-id` |
-| `OWNER_NAME` | Owner's display name | `Christopher Craig` |
-| `BUILT_IN_FORGE_API_URL` | LLM/Storage/Notification API URL | `https://api.provider.com` |
-| `BUILT_IN_FORGE_API_KEY` | Server-side API key for built-in services | `sk-...` |
-| `VITE_FRONTEND_FORGE_API_KEY` | Frontend API key for built-in services | `pk-...` |
-| `VITE_FRONTEND_FORGE_API_URL` | Frontend API URL for built-in services | `https://api.provider.com` |
-| `GHL_API_KEY` | GoHighLevel API key | `Bearer ...` |
-| `GHL_LOCATION_ID` | GoHighLevel location ID | `hf2fpQyPswcNJOmnqRFR` |
-| `BLOG_API_KEY` | API key for external blog publishing | `your-blog-api-key` |
-| `VITE_APP_TITLE` | Site title | `The Tax Firm` |
-| `VITE_APP_LOGO` | Logo URL | `https://cdn.example.com/logo.png` |
+| Variable                | Description                                                   | Example                                                                  |
+| ----------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `DATABASE_URL`          | MySQL/TiDB connection string (include SSL for prod)           | `mysql://user:pass@host:4000/thetaxfirm?ssl={"rejectUnauthorized":true}` |
+| `JWT_SECRET`            | Secret for signing session cookies (use a long random string) | `openssl rand -hex 32`                                                   |
+| `GOOGLE_CLIENT_ID`      | Google OAuth 2.0 client ID (server-side)                      | `xxxx.apps.googleusercontent.com`                                        |
+| `VITE_GOOGLE_CLIENT_ID` | Same value as `GOOGLE_CLIENT_ID`, exposed to the frontend     | `xxxx.apps.googleusercontent.com`                                        |
+| `GOOGLE_CLIENT_SECRET`  | Google OAuth 2.0 client secret                                | `GOCSPX-...`                                                             |
+| `ADMIN_EMAILS`          | Comma-separated emails granted the `admin` role on sign-in    | `chris@thetaxfirm.us`                                                    |
+| `GHL_API_KEY`           | GoHighLevel API key (JWT bearer token, no "Bearer " prefix)   | `eyJhbGci...`                                                            |
+| `GHL_LOCATION_ID`       | GoHighLevel location ID                                       | `hf2fpQyPswcNJOmnqRFR`                                                   |
+| `BLOG_API_KEY`          | Bearer token protecting `/api/blog` write endpoints           | random string                                                            |
 
-## Optional Variables
+## Object storage (portal document + blog image uploads)
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `PORT` | Server port (defaults to 3000) | `3000` |
-| `VITE_ANALYTICS_ENDPOINT` | Analytics endpoint URL | `https://analytics.example.com` |
-| `VITE_ANALYTICS_WEBSITE_ID` | Analytics website ID | `website-id` |
+S3-compatible — works with Cloudflare R2, AWS S3, Backblaze B2, etc.
+
+| Variable               | Description                                                      | Example                                        |
+| ---------------------- | ---------------------------------------------------------------- | ---------------------------------------------- |
+| `S3_BUCKET`            | Bucket name                                                      | `thetaxfirm-uploads`                           |
+| `S3_ACCESS_KEY_ID`     | Access key                                                       | —                                              |
+| `S3_SECRET_ACCESS_KEY` | Secret key                                                       | —                                              |
+| `S3_ENDPOINT`          | Custom endpoint. **Set for R2**, leave unset for AWS S3          | `https://<accountid>.r2.cloudflarestorage.com` |
+| `S3_REGION`            | Region (`auto` for R2)                                           | `auto`                                         |
+| `S3_PUBLIC_URL`        | Public base URL for **blog assets only** (durable image links). Portal documents stay on presigned URLs regardless. | `https://cdn.thetaxfirm.us`                    |
+| `S3_FORCE_PATH_STYLE`  | `true` to force path-style addressing (some providers)           | `true`                                         |
+
+## Email notifications (optional but recommended)
+
+Owner alerts on new questionnaire submissions / blog posts, sent via [Resend](https://resend.com).
+If unset, the underlying actions still succeed — the notification is simply skipped.
+
+| Variable            | Description                                                 | Example                               |
+| ------------------- | ----------------------------------------------------------- | ------------------------------------- |
+| `RESEND_API_KEY`    | Resend API key                                              | `re_...`                              |
+| `NOTIFY_EMAIL_TO`   | Recipient(s), comma-separated (falls back to `OWNER_EMAIL`) | `chris@thetaxfirm.us`                 |
+| `NOTIFY_EMAIL_FROM` | Verified sender                                             | `The Tax Firm <notify@thetaxfirm.us>` |
+| `OWNER_EMAIL`       | Owner email; default notification recipient                 | `chris@thetaxfirm.us`                 |
+
+## Optional
+
+| Variable | Description                                        | Default |
+| -------- | -------------------------------------------------- | ------- |
+| `PORT`   | Server port. Railway injects this; do not set it.  | `3000`  |
 
 ## Notes
 
-- All `VITE_` prefixed variables are exposed to the frontend bundle
-- `DATABASE_URL` must include SSL configuration for production
-- The `BLOG_API_KEY` is used as a Bearer token for the `/api/blog/articles` REST endpoint
-- `GHL_API_KEY` should include the "Bearer " prefix
+- The app no longer depends on any Manus / "Forge" service, and no longer
+  deploys to Vercel. `BUILT_IN_FORGE_*`, `VITE_FRONTEND_FORGE_*`,
+  `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL`, and `VITE_APP_ID` are read by no
+  code and can be deleted from Railway whenever convenient — leaving them set
+  does no harm.
+- `OWNER_OPEN_ID` still works (it grants the `admin` role to one openId), but
+  openIds are now `google:<sub>`, so a value carried over from Manus will never
+  match. Prefer `ADMIN_EMAILS`.
+- `VITE_GOOGLE_CLIENT_ID` is the **only** `VITE_*` variable the client reads.
+  Earlier revisions of this file also listed `VITE_APP_TITLE`, `VITE_APP_LOGO`,
+  `OWNER_NAME` and `VITE_ANALYTICS_*`; no code reads any of them, so setting them
+  does nothing. The page title and metadata live in `client/index.html`.
+- Google OAuth requires an **Authorized redirect URI** of
+  `https://YOUR_DOMAIN/api/oauth/callback` (add one per domain, including any
+  preview/staging domain and `http://localhost:3000/api/oauth/callback` for local dev).

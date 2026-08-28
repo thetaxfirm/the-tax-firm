@@ -1,8 +1,36 @@
 import { describe, it, expect, afterAll } from "vitest";
+import { sanitizeSlugForFileName } from "./blogApi";
 
-const BASE = "http://localhost:3000/api/blog";
+/**
+ * End-to-end tests for the blog REST API. They drive a *running* server and a
+ * real database, so they are skipped unless one is reachable and BLOG_API_KEY
+ * is set — point BLOG_API_BASE_URL at a deployment to run them elsewhere.
+ * Routing for the same endpoints is covered without those dependencies in
+ * server/app.test.ts.
+ */
+const BASE = process.env.BLOG_API_BASE_URL ?? "http://localhost:3000/api/blog";
 const API_KEY = process.env.BLOG_API_KEY!;
 const TEST_SLUG = `vitest-blog-api-${Date.now()}`;
+
+async function isServerReachable(): Promise<boolean> {
+  try {
+    await fetch(`${BASE}/articles`, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(2000),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const canRun = Boolean(API_KEY) && (await isServerReachable());
+
+if (!canRun) {
+  console.warn(
+    `[blogApi.test] Skipping live blog API tests: no server reachable at ${BASE} (or BLOG_API_KEY unset).`
+  );
+}
 
 // Track created articles for cleanup
 const createdSlugs: string[] = [];
@@ -15,12 +43,13 @@ async function deleteArticle(slug: string) {
 }
 
 afterAll(async () => {
+  if (!canRun) return;
   for (const slug of createdSlugs) {
     await deleteArticle(slug).catch(() => {});
   }
 });
 
-describe("Blog API", () => {
+describe.skipIf(!canRun)("Blog API", () => {
   describe("Authentication", () => {
     it("rejects POST without Authorization header", async () => {
       const res = await fetch(`${BASE}/articles`, {
@@ -252,14 +281,17 @@ describe("Blog API", () => {
     });
 
     it("returns 404 for non-existent article", async () => {
-      const res = await fetch(`${BASE}/articles/definitely-does-not-exist-xyz`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({ title: "Updated" }),
-      });
+      const res = await fetch(
+        `${BASE}/articles/definitely-does-not-exist-xyz`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${API_KEY}`,
+          },
+          body: JSON.stringify({ title: "Updated" }),
+        }
+      );
       expect(res.status).toBe(404);
     });
 
@@ -341,5 +373,49 @@ describe("Blog API", () => {
       const getRes = await fetch(`${BASE}/articles/${slug}`);
       expect(getRes.status).toBe(404);
     });
+  });
+});
+
+/**
+ * These run unconditionally — no server or credentials needed. The slug reaches
+ * the image-upload handler from the query string and becomes part of a file
+ * name written to disk, so neutralising path traversal here is a security
+ * control, not cosmetics.
+ */
+describe("sanitizeSlugForFileName", () => {
+  it("strips directory traversal", () => {
+    for (const attack of [
+      "../../../../etc/cron.d/x",
+      "..%2f..%2fetc",
+      "/etc/passwd",
+      "..\\..\\windows\\system32",
+      "....//....//x",
+    ]) {
+      const safe = sanitizeSlugForFileName(attack);
+      expect(safe).not.toContain("/");
+      expect(safe).not.toContain("\\");
+      expect(safe).not.toContain("..");
+    }
+  });
+
+  it("keeps ordinary slugs readable", () => {
+    expect(sanitizeSlugForFileName("s-corp-election-guide")).toBe(
+      "s-corp-election-guide"
+    );
+    expect(sanitizeSlugForFileName("Tax_Strategy 2026")).toBe(
+      "tax_strategy-2026"
+    );
+  });
+
+  it("falls back to a default for empty or fully-stripped input", () => {
+    expect(sanitizeSlugForFileName(undefined)).toBe("blog");
+    expect(sanitizeSlugForFileName("")).toBe("blog");
+    expect(sanitizeSlugForFileName("///")).toBe("blog");
+  });
+
+  it("bounds the length", () => {
+    expect(sanitizeSlugForFileName("a".repeat(500)).length).toBeLessThanOrEqual(
+      100
+    );
   });
 });

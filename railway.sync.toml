@@ -1,0 +1,9 @@
+# Config for the OPTIONAL blog-sync worker service.
+#
+# Railway applies the repo-root `railway.toml` to every service by default, which
+# would build the web app. To run the Drive -> blog sync worker as its own
+# service, point that service's Settings -> Config as code at this file
+# (`railway.sync.toml`); the web service keeps using `railway.toml`.
+
+[build]
+dockerfilePath = "Dockerfile.sync"
