@@ -124,19 +124,32 @@ the client reads — there is nothing to configure for branding or analytics.
 
 ---
 
-## Step 5 — Create the database schema
+## Step 5 — Database schema (automatic — nothing to run)
 
-The MySQL database starts empty. Push the schema once:
+The MySQL database starts empty, but you do **not** need to push the schema by
+hand. The migrations in `drizzle/` are committed and shipped in the image, and
+`runMigrations()` applies any pending ones on every boot, before the server
+accepts traffic. That creates the `users`, `questionnaire_responses`,
+`engagements`, `documents`, `messages`, and `blog_articles` tables on the first
+deploy. It is idempotent — drizzle records applied migrations in a
+`__drizzle_migrations` table and skips them thereafter — so restarts and
+redeploys are safe.
 
-- **Option A (locally):** with the Railway MySQL _public_ URL exported:
-  ```bash
-  DATABASE_URL='mysql://…public…' pnpm db:push
-  ```
-- **Option B (Railway one-off):** run `pnpm db:push` as a one-off command in the
-  service shell.
+**Confirm it worked.** In the web service's **Deploy Logs**, look for:
 
-This creates the `users`, `questionnaire_responses`, `engagements`, `documents`,
-`messages`, and `blog_articles` tables.
+```
+[Migrate] Database schema is up to date
+```
+
+If you instead see `[Migrate] Failed to apply migrations:` or
+`[Migrate] DATABASE_URL not set — skipping migrations`, the schema was not
+created. Migration failures are logged but deliberately do **not** crash the
+process, so the site will still serve pages while every database-backed feature
+fails. Fix `DATABASE_URL` (Step 4) and redeploy.
+
+> `pnpm db:push` is a **development** command: it regenerates migration files
+> after you edit `drizzle/schema.ts`, and those generated files are committed to
+> the repo. It is not part of deploying.
 
 ---
 
@@ -156,12 +169,16 @@ Test on the temporary `*.up.railway.app` URL first, then cut the domain over.
 
 ## Step 7 — Verify
 
+Run this against the temporary `https://<subdomain>.up.railway.app` URL **before**
+the cutover in Step 6, then again on `thetaxfirm.us` afterwards.
+
+- [ ] Deploy Logs show `[Migrate] Database schema is up to date` (Step 5)
 - [ ] Home, service pages, blog render
 - [ ] Questionnaire submits → row in DB **and** a contact appears in GoHighLevel
 - [ ] "Sign in" → Google → returns logged in; your account shows as **admin**
 - [ ] Client portal: upload a document → downloads back (storage works)
-- [ ] `https://thetaxfirm.us/api/blog/articles` returns **JSON** (not HTML) —
-      the production API is now actually running, unlike the old static host
+- [ ] `/api/blog/articles` returns **JSON** (not HTML) — the production API is
+      now actually running, unlike the old static host
 
 ---
 
@@ -187,7 +204,3 @@ Vercel project can no longer build this app. Once Railway is serving
    it stops attempting a build on every push).
 3. The Vercel-only environment variables disappear with the project; nothing in
    this repo reads them.
-
-```
-
-```
