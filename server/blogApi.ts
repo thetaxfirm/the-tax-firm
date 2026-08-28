@@ -47,6 +47,21 @@ function generateSlug(title: string): string {
     .slice(0, 250);
 }
 
+/**
+ * Reduce a caller-supplied slug to a safe file-name fragment: alphanumerics,
+ * dash and underscore only. Path separators and "." (so no ".." traversal)
+ * are collapsed to dashes.
+ */
+function sanitizeSlugForFileName(slug: string | undefined): string {
+  const cleaned = (slug ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 100);
+  return cleaned || "blog";
+}
+
 function estimateReadTime(content: string): string {
   const words = content.split(/\s+/).length;
   const minutes = Math.max(1, Math.ceil(words / 200));
@@ -335,7 +350,11 @@ blogApiRouter.post(
 
       const ext = contentType.split("/")[1]?.replace("jpeg", "jpg") || "png";
       const hash = crypto.createHash("md5").update(imageData).digest("hex").slice(0, 12);
-      const slug = (req.query.slug as string) || "blog";
+      // The slug reaches us from the query string and ends up in a file name,
+      // so restrict it to characters that cannot traverse a directory. Without
+      // this, path.join() below resolves "../" segments and writes outside the
+      // target folder.
+      const slug = sanitizeSlugForFileName(req.query.slug as string | undefined);
       const fileName = `${slug}_${hash}.${ext}`;
 
       // Production: upload to S3-compatible object storage (R2/S3)
@@ -349,6 +368,11 @@ blogApiRouter.post(
       const publicDir = path.resolve(import.meta.dirname, "../client/public/blog-images");
       if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
       const filePath = path.join(publicDir, fileName);
+      // Defence in depth: refuse anything that still resolves outside publicDir.
+      if (path.relative(publicDir, filePath).startsWith("..")) {
+        res.status(400).json({ error: "Invalid slug" });
+        return;
+      }
       fs.writeFileSync(filePath, imageData);
       const localUrl = `/blog-images/${fileName}`;
       console.log(`[Blog API] Saved image locally: ${filePath}`);
@@ -360,4 +384,4 @@ blogApiRouter.post(
   }
 );
 
-export { blogApiRouter };
+export { blogApiRouter, sanitizeSlugForFileName };

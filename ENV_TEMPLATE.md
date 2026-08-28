@@ -29,7 +29,7 @@ S3-compatible — works with Cloudflare R2, AWS S3, Backblaze B2, etc.
 | `S3_SECRET_ACCESS_KEY` | Secret key                                                       | —                                              |
 | `S3_ENDPOINT`          | Custom endpoint. **Set for R2**, leave unset for AWS S3          | `https://<accountid>.r2.cloudflarestorage.com` |
 | `S3_REGION`            | Region (`auto` for R2)                                           | `auto`                                         |
-| `S3_PUBLIC_URL`        | Public base URL for objects (needed for durable blog image URLs) | `https://cdn.thetaxfirm.us`                    |
+| `S3_PUBLIC_URL`        | Public base URL for **blog assets only** (durable image links). Portal documents stay on presigned URLs regardless. | `https://cdn.thetaxfirm.us`                    |
 | `S3_FORCE_PATH_STYLE`  | `true` to force path-style addressing (some providers)           | `true`                                         |
 
 ## Email notifications (optional but recommended)

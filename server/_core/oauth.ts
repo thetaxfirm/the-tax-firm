@@ -42,7 +42,15 @@ export function registerOAuthRoutes(app: Express) {
 
       const email = profile.email?.toLowerCase() ?? null;
       const openId = `google:${profile.sub}`;
-      const isAdmin = email !== null && ENV.adminEmails.includes(email);
+      // ADMIN_EMAILS is matched only against a Google-VERIFIED address. Google
+      // issues id_tokens with email_verified:false for accounts on unverified
+      // custom Workspace domains, so anyone able to stand up a Workspace trial
+      // for a domain could otherwise mint an address matching ADMIN_EMAILS and
+      // be handed the admin role.
+      const isAdmin =
+        email !== null &&
+        profile.emailVerified &&
+        ENV.adminEmails.includes(email);
 
       await db.upsertUser({
         openId,

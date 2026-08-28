@@ -19,7 +19,7 @@ export default function SEOHead({
   title,
   description,
   keywords,
-  image = "/og-default.jpg",
+  image,
   url,
   type = "website",
   author,
@@ -61,7 +61,12 @@ export default function SEOHead({
     // Open Graph
     setMeta("og:title", fullTitle);
     setMeta("og:description", description);
-    setMeta("og:image", image);
+    // Only advertise an image when there is one. The migration off Manus left
+    // this defaulting to /og-default.jpg, which ships in no build — a default
+    // that 404s is worse for a social preview than no og:image at all. Drop a
+    // file at client/public/og-default.jpg and pass it to restore a site-wide
+    // default.
+    if (image) setMeta("og:image", image);
     setMeta("og:url", canonicalUrl);
     setMeta("og:type", type);
     setMeta("og:site_name", siteName);
@@ -70,7 +75,7 @@ export default function SEOHead({
     setMeta("twitter:card", "summary_large_image", true);
     setMeta("twitter:title", fullTitle, true);
     setMeta("twitter:description", description, true);
-    setMeta("twitter:image", image, true);
+    if (image) setMeta("twitter:image", image, true);
 
     // Article-specific tags
     if (type === "article") {

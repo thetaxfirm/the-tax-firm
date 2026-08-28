@@ -10,7 +10,8 @@
 //   S3_ENDPOINT           custom endpoint. Set for R2:
 //                         https://<accountid>.r2.cloudflarestorage.com
 //                         Leave unset for AWS S3.
-//   S3_PUBLIC_URL         public base URL for objects (e.g. an R2 public bucket
+//   S3_PUBLIC_URL         public base URL for PUBLIC objects only (see
+//                         PUBLIC_KEY_PREFIXES below) — e.g. an R2 public bucket
 //                         URL / custom domain, or https://<bucket>.s3.<region>.amazonaws.com).
 //                         When set, uploaded object URLs are built from it so they
 //                         are durable (needed for blog images). When unset, a
@@ -88,12 +89,30 @@ function toBody(data: Buffer | Uint8Array | string): Buffer {
   return Buffer.from(data);
 }
 
+/**
+ * Key prefixes whose objects are meant to be world-readable, and so may be
+ * served from S3_PUBLIC_URL as a durable unauthenticated link.
+ *
+ * Everything NOT listed here — above all `portal/<userId>/...`, which holds
+ * client tax returns, W2s and financial statements — is handed out as a
+ * short-lived presigned URL even when S3_PUBLIC_URL is set. That matters
+ * because the returned URL is persisted in `documents.fileUrl` and rendered
+ * as a plain anchor: a public base URL would turn every uploaded client
+ * document into a permanent link that needs no authentication to fetch.
+ */
+const PUBLIC_KEY_PREFIXES = ["blog/"];
+
+function isPublicKey(key: string): boolean {
+  return PUBLIC_KEY_PREFIXES.some(prefix => key.startsWith(prefix));
+}
+
 async function resolveUrl(key: string): Promise<string> {
   const { bucket, publicBaseUrl } = getConfig();
-  if (publicBaseUrl) {
+  if (publicBaseUrl && isPublicKey(key)) {
     return `${publicBaseUrl}/${key}`;
   }
-  // No public base configured — hand back a time-limited presigned URL.
+  // Private object, or no public base configured — hand back a time-limited
+  // presigned URL.
   return getSignedUrl(
     getClient(),
     new GetObjectCommand({ Bucket: bucket, Key: key }),

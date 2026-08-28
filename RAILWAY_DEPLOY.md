@@ -57,6 +57,11 @@ External accounts you'll create: a **Google OAuth client** (sign-in) and an
    - `S3_REGION` = `auto`
    - `S3_PUBLIC_URL` = the bucket's public URL (or custom domain)
 
+   > Public access on the bucket only affects objects under `blog/`. Client
+   > portal uploads live under `portal/<userId>/` and are always handed out as
+   > short-lived presigned URLs, never as public links — see
+   > `PUBLIC_KEY_PREFIXES` in `server/storage.ts`.
+
 _(AWS S3 works identically — just omit `S3_ENDPOINT` and use a real region.)_
 
 ---

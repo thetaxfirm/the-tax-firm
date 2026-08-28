@@ -1,4 +1,5 @@
 import { describe, it, expect, afterAll } from "vitest";
+import { sanitizeSlugForFileName } from "./blogApi";
 
 /**
  * End-to-end tests for the blog REST API. They drive a *running* server and a
@@ -372,5 +373,49 @@ describe.skipIf(!canRun)("Blog API", () => {
       const getRes = await fetch(`${BASE}/articles/${slug}`);
       expect(getRes.status).toBe(404);
     });
+  });
+});
+
+/**
+ * These run unconditionally — no server or credentials needed. The slug reaches
+ * the image-upload handler from the query string and becomes part of a file
+ * name written to disk, so neutralising path traversal here is a security
+ * control, not cosmetics.
+ */
+describe("sanitizeSlugForFileName", () => {
+  it("strips directory traversal", () => {
+    for (const attack of [
+      "../../../../etc/cron.d/x",
+      "..%2f..%2fetc",
+      "/etc/passwd",
+      "..\\..\\windows\\system32",
+      "....//....//x",
+    ]) {
+      const safe = sanitizeSlugForFileName(attack);
+      expect(safe).not.toContain("/");
+      expect(safe).not.toContain("\\");
+      expect(safe).not.toContain("..");
+    }
+  });
+
+  it("keeps ordinary slugs readable", () => {
+    expect(sanitizeSlugForFileName("s-corp-election-guide")).toBe(
+      "s-corp-election-guide"
+    );
+    expect(sanitizeSlugForFileName("Tax_Strategy 2026")).toBe(
+      "tax_strategy-2026"
+    );
+  });
+
+  it("falls back to a default for empty or fully-stripped input", () => {
+    expect(sanitizeSlugForFileName(undefined)).toBe("blog");
+    expect(sanitizeSlugForFileName("")).toBe("blog");
+    expect(sanitizeSlugForFileName("///")).toBe("blog");
+  });
+
+  it("bounds the length", () => {
+    expect(sanitizeSlugForFileName("a".repeat(500)).length).toBeLessThanOrEqual(
+      100
+    );
   });
 });
