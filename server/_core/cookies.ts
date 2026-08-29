@@ -8,7 +8,7 @@ function isIpAddress(host: string) {
   return host.includes(":");
 }
 
-function isSecureRequest(req: Request) {
+export function isSecureRequest(req: Request) {
   if (req.protocol === "https") return true;
 
   const forwardedProto = req.headers["x-forwarded-proto"];
@@ -43,6 +43,25 @@ export function getSessionCookieOptions(
     httpOnly: true,
     path: "/",
     sameSite: "none",
+    secure: isSecureRequest(req),
+  };
+}
+
+/**
+ * Cookie carrying the per-flow OAuth nonce.
+ *
+ * SameSite=Lax rather than None: the cookie has to survive Google's top-level
+ * GET redirect back to /api/oauth/callback (Lax does allow that) while not
+ * riding along on cross-site subrequests. Short-lived, and scoped to the OAuth
+ * routes so it is never sent anywhere else.
+ */
+export function getOAuthStateCookieOptions(
+  req: Request
+): Pick<CookieOptions, "httpOnly" | "path" | "sameSite" | "secure"> {
+  return {
+    httpOnly: true,
+    path: "/api/oauth",
+    sameSite: "lax",
     secure: isSecureRequest(req),
   };
 }
