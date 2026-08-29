@@ -310,6 +310,27 @@ function AdminDocumentsTab() {
     onSuccess: () => utils.document.list.invalidate(),
   });
 
+  /**
+   * The stored fileUrl is a presigned URL that expires, so it must not be used
+   * as a permanent href — ask the server for a fresh one at click time. The
+   * server also re-checks that this document belongs to the caller.
+   *
+   * The tab is opened synchronously, before the await, so the click still
+   * counts as the user gesture that lets it through the popup blocker.
+   */
+  const handleDownload = async (documentId: number) => {
+    const tab = window.open("", "_blank");
+    if (tab) tab.opener = null;
+    try {
+      const { url } = await utils.document.getDownloadUrl.fetch({ documentId });
+      if (tab) tab.location.replace(url);
+      else window.location.href = url;
+    } catch {
+      tab?.close();
+      alert("Could not open that document. Please try again.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="font-serif text-xl text-white">All Client Documents</h2>
@@ -343,15 +364,14 @@ function AdminDocumentsTab() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <a
-                    href={doc.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(doc.id)}
                     className="flex items-center gap-1 px-3 py-1.5 text-xs text-[#D4A853] border border-[#D4A853]/20 rounded hover:bg-[#D4A853]/10 transition-all"
                   >
                     <Download size={12} />
                     Download
-                  </a>
+                  </button>
                   <button
                     onClick={() => {
                       if (confirm("Delete this document?")) {

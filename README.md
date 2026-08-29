@@ -70,7 +70,6 @@ DATABASE_URL=mysql://user:password@host:port/database
 # Authentication — Google OAuth 2.0
 JWT_SECRET=a-long-random-string          # openssl rand -hex 32
 GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
-VITE_GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com   # same value, frontend
 GOOGLE_CLIENT_SECRET=GOCSPX-...
 ADMIN_EMAILS=chris@thetaxfirm.us         # comma-separated, granted the admin role
 
@@ -96,8 +95,10 @@ GHL_LOCATION_ID=hf2fpQyPswcNJOmnqRFR
 BLOG_API_KEY=your-blog-api-key
 ```
 
-`VITE_GOOGLE_CLIENT_ID` is the only `VITE_*` variable the client reads; the page
-title and metadata are in `client/index.html`.
+The client reads no environment variables at all — sign-in starts at the
+server-rendered `GET /api/oauth/login` — so nothing is baked into the bundle and
+no variable needs to be present at build time. The page title and metadata are
+in `client/index.html`.
 
 Google OAuth needs an **Authorized redirect URI** of `<origin>/api/oauth/callback`
 for every domain the app runs on, including `http://localhost:3000/api/oauth/callback`.

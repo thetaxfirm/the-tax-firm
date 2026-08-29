@@ -38,8 +38,9 @@ External accounts you'll create: a **Google OAuth client** (sign-in) and an
      - `http://localhost:3000/api/oauth/callback` (local dev)
 4. Copy the **Client ID** and **Client secret**.
 
-> The Client ID goes into BOTH `GOOGLE_CLIENT_ID` (server) and
-> `VITE_GOOGLE_CLIENT_ID` (frontend, baked at build). The secret is server-only.
+> Both the Client ID and secret are server-only: the sign-in flow starts at
+> `GET /api/oauth/login`, which the server builds so it can bind an
+> unguessable `state` to an httpOnly cookie.
 
 ---
 
@@ -97,7 +98,6 @@ BLOG_API_KEY          = <generated — see handoff message>
 
 # Google sign-in  (Client ID goes in BOTH of these)
 GOOGLE_CLIENT_ID      = <from Step 1>
-VITE_GOOGLE_CLIENT_ID = <same value as GOOGLE_CLIENT_ID>
 GOOGLE_CLIENT_SECRET  = <from Step 1>
 ADMIN_EMAILS          = chris@thetaxfirm.us
 
@@ -120,12 +120,13 @@ NOTIFY_EMAIL_FROM     = The Tax Firm <notify@thetaxfirm.us>
 OWNER_EMAIL           = chris@thetaxfirm.us
 ```
 
-That is the complete set. `VITE_GOOGLE_CLIENT_ID` is the only `VITE_*` variable
-the client reads — there is nothing to configure for branding or analytics.
+That is the complete set. The client bundle reads no environment variables, so
+there is nothing to configure for branding or analytics and nothing that must be
+present before the build.
 
-> **Important:** `VITE_GOOGLE_CLIENT_ID` must be set _before the build_ — it is
-> compiled into the client bundle. If you add it after the first build, trigger a
-> redeploy so it takes effect.
+> No variable here is needed at build time — the client bundle contains none of
+> them. Adding or changing one takes effect on the next restart; no rebuild is
+> required.
 
 ---
 

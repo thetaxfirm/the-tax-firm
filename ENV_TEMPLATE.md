@@ -1,8 +1,9 @@
 # Environment Variables
 
 Set these in the Railway service's **Variables** tab (see `RAILWAY_DEPLOY.md`).
-`VITE_`-prefixed variables are baked into the frontend bundle at build time; all
-others are server-only. Never commit real values to git.
+Every variable is read by the server at runtime — nothing is baked into the
+client bundle — so a change takes effect on restart, with no rebuild. Never
+commit real values to git.
 
 ## Required
 
@@ -11,7 +12,6 @@ others are server-only. Never commit real values to git.
 | `DATABASE_URL`          | MySQL/TiDB connection string (include SSL for prod)           | `mysql://user:pass@host:4000/thetaxfirm?ssl={"rejectUnauthorized":true}` |
 | `JWT_SECRET`            | Secret for signing session cookies (use a long random string) | `openssl rand -hex 32`                                                   |
 | `GOOGLE_CLIENT_ID`      | Google OAuth 2.0 client ID (server-side)                      | `xxxx.apps.googleusercontent.com`                                        |
-| `VITE_GOOGLE_CLIENT_ID` | Same value as `GOOGLE_CLIENT_ID`, exposed to the frontend     | `xxxx.apps.googleusercontent.com`                                        |
 | `GOOGLE_CLIENT_SECRET`  | Google OAuth 2.0 client secret                                | `GOCSPX-...`                                                             |
 | `ADMIN_EMAILS`          | Comma-separated emails granted the `admin` role on sign-in    | `chris@thetaxfirm.us`                                                    |
 | `GHL_API_KEY`           | GoHighLevel API key (JWT bearer token, no "Bearer " prefix)   | `eyJhbGci...`                                                            |
@@ -60,10 +60,12 @@ If unset, the underlying actions still succeed — the notification is simply sk
 - `OWNER_OPEN_ID` still works (it grants the `admin` role to one openId), but
   openIds are now `google:<sub>`, so a value carried over from Manus will never
   match. Prefer `ADMIN_EMAILS`.
-- `VITE_GOOGLE_CLIENT_ID` is the **only** `VITE_*` variable the client reads.
-  Earlier revisions of this file also listed `VITE_APP_TITLE`, `VITE_APP_LOGO`,
-  `OWNER_NAME` and `VITE_ANALYTICS_*`; no code reads any of them, so setting them
-  does nothing. The page title and metadata live in `client/index.html`.
+- The client reads **no** environment variables. Google sign-in starts at
+  `GET /api/oauth/login`, which the server builds, so `VITE_GOOGLE_CLIENT_ID` is
+  no longer needed — only the server-side `GOOGLE_CLIENT_ID`. Earlier revisions
+  of this file also listed `VITE_APP_TITLE`, `VITE_APP_LOGO`, `OWNER_NAME` and
+  `VITE_ANALYTICS_*`; nothing reads those either. The page title and metadata
+  live in `client/index.html`.
 - Google OAuth requires an **Authorized redirect URI** of
   `https://YOUR_DOMAIN/api/oauth/callback` (add one per domain, including any
   preview/staging domain and `http://localhost:3000/api/oauth/callback` for local dev).

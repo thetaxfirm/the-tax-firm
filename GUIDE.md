@@ -92,7 +92,7 @@ Prevents re-publishing articles when Railway redeploys containers.
 | `DATABASE_URL`                               | MySQL connection string    |
 | `BLOG_API_KEY`                               | API key for blog endpoints |
 | `JWT_SECRET`                                 | Cookie/session secret      |
-| `GOOGLE_CLIENT_ID` / `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID     |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID (server-only)     |
 | `GOOGLE_CLIENT_SECRET`                       | Google OAuth client secret |
 | `GHL_API_KEY`                                | GoHighLevel CRM API key    |
 | `GHL_LOCATION_ID`                            | GoHighLevel location ID    |

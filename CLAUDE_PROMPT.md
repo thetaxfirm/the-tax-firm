@@ -191,7 +191,7 @@ curl -X POST https://thetaxfirm.us/api/blog/articles \
 | Tely.ai               | Automated blog publishing                      | Uses `BLOG_API_KEY` via REST API                                                        |
 | Google Drive          | Blog content sync                              | `DRIVE_FOLDER_ID`, `GOOGLE_API_KEY`                                                     |
 | S3-compatible storage | File storage (documents, images)               | `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`, `S3_PUBLIC_URL` |
-| Google OAuth          | Sign-in                                        | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `VITE_GOOGLE_CLIENT_ID`                     |
+| Google OAuth          | Sign-in (starts at `GET /api/oauth/login`)     | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                     |
 | Resend                | Owner email notifications                      | `RESEND_API_KEY`, `NOTIFY_EMAIL_TO`, `NOTIFY_EMAIL_FROM`                                |
 
 ---

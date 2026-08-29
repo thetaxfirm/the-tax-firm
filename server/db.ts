@@ -160,6 +160,14 @@ export async function createDocument(data: InsertDocument) {
   return { success: true, id: Number(result[0].insertId) };
 }
 
+export async function getDocumentById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const rows = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
 export async function getDocumentsByUserId(userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

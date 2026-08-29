@@ -88,8 +88,6 @@ jobs:
 
       - name: Build project
         run: pnpm build
-        env:
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
 
       - name: Assert the build produced what `pnpm start` serves
         run: |

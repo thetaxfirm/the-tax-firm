@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -13,6 +14,7 @@ import {
   getAllEngagements,
   updateEngagement,
   createDocument,
+  getDocumentById,
   getDocumentsByUserId,
   getAllDocuments,
   deleteDocument,
@@ -275,11 +277,32 @@ export const appRouter = router({
       return getAllDocuments();
     }),
 
-    /** Client or Admin: get download URL for a document */
+    /**
+     * Client or Admin: mint a fresh download URL for one document.
+     *
+     * Takes a document id, never a raw storage key: the previous signature
+     * accepted any fileKey from any signed-in user, so one client could read
+     * another client's `portal/<userId>/...` documents just by guessing or
+     * observing a key. Ownership is now checked against the document row.
+     *
+     * Resolving on demand also keeps links working: the stored fileUrl is a
+     * presigned URL that expires, so it must not be used as a permanent href.
+     */
     getDownloadUrl: protectedProcedure
-      .input(z.object({ fileKey: z.string() }))
-      .query(async ({ input }) => {
-        return storageGet(input.fileKey);
+      .input(z.object({ documentId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const doc = await getDocumentById(input.documentId);
+        if (!doc) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Document not found" });
+        }
+
+        const isOwner = doc.userId === ctx.user.id;
+        const isAdmin = ctx.user.role === "admin";
+        if (!isOwner && !isAdmin) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not your document" });
+        }
+
+        return storageGet(doc.fileKey);
       }),
 
     /** Admin: delete a document */
