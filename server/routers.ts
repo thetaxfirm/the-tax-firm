@@ -39,8 +39,11 @@ export const appRouter = router({
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      // No maxAge: clearCookie already sets an epoch `expires`, and passing
+      // maxAge alongside it is deprecated (ignored outright in Express 5).
+      // What actually has to match for the browser to drop the cookie is the
+      // path/domain/secure/sameSite triple, which cookieOptions carries.
+      ctx.res.clearCookie(COOKIE_NAME, getSessionCookieOptions(ctx.req));
       return { success: true } as const;
     }),
   }),
