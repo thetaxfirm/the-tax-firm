@@ -18,11 +18,9 @@ export const ENV = {
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
   isProduction: process.env.NODE_ENV === "production",
 
-  // Google OAuth (sign-in). The client no longer reads a client ID — the flow
-  // starts server-side at GET /api/oauth/login — so VITE_GOOGLE_CLIENT_ID is
-  // only honoured as a fallback for deployments that still have it set.
-  googleClientId:
-    process.env.GOOGLE_CLIENT_ID ?? process.env.VITE_GOOGLE_CLIENT_ID ?? "",
+  // Google OAuth (sign-in). Server-only: the flow starts at
+  // GET /api/oauth/login, so no client ID is ever exposed to the browser.
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
   // Emails granted the "admin" role on sign-in (comma-separated, case-insensitive).
   adminEmails: parseList(process.env.ADMIN_EMAILS),

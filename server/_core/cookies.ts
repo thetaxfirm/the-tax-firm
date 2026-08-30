@@ -39,11 +39,22 @@ export function getSessionCookieOptions(
   //       ? hostname
   //       : undefined;
 
+  const secure = isSecureRequest(req);
+
   return {
     httpOnly: true,
     path: "/",
-    sameSite: "none",
-    secure: isSecureRequest(req),
+    // SameSite=None is only legal alongside Secure — every modern browser
+    // silently DROPS a `SameSite=None` cookie that is not also `Secure`. That
+    // combination arises whenever the request does not look secure to us: plain
+    // HTTP locally, or a CDN/proxy that terminates TLS and forwards to the
+    // origin over HTTP without setting x-forwarded-proto (Cloudflare's
+    // "Flexible" SSL mode does exactly this). The session cookie would then
+    // never be stored, every request would come back unauthenticated, and the
+    // client would bounce to login forever. Fall back to Lax, which is valid
+    // without Secure and still survives the OAuth callback's top-level GET.
+    sameSite: secure ? "none" : "lax",
+    secure,
   };
 }
 
