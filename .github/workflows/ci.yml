@@ -42,8 +42,6 @@ jobs:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-      GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
-      GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID }}
       BLOG_API_KEY: ${{ secrets.BLOG_API_KEY }}
     steps:
       - uses: actions/checkout@v4

@@ -1,7 +1,7 @@
 import { eq, desc, and, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
-  InsertUser, InsertQuestionnaireResponse, InsertEngagement, InsertDocument, InsertMessage, InsertBlogArticle,
+  InsertUser, InsertEngagement, InsertDocument, InsertMessage, InsertBlogArticle,
   users, questionnaireResponses, engagements, documents, messages, blogArticles
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -93,13 +93,6 @@ export async function getUserByOpenId(openId: string) {
 }
 
 /* ── Questionnaire Responses ─────────────────────────────────── */
-
-export async function createQuestionnaireResponse(data: InsertQuestionnaireResponse) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.insert(questionnaireResponses).values(data);
-  return { success: true };
-}
 
 export async function getAllQuestionnaireResponses() {
   const db = await getDb();

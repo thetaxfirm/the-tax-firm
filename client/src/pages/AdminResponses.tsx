@@ -209,7 +209,7 @@ export default function AdminResponses() {
                 Discovery Call <span className="gold-gradient-text">Responses</span>
               </h1>
               <p className="mt-2 text-[#E8E4DD]/40">
-                Review prospect questionnaire submissions before your discovery calls.
+                Review historical questionnaire submissions. New website requests are in <a href="https://portal.tely.health" className="underline">Tely Clients</a>.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -267,7 +267,7 @@ export default function AdminResponses() {
               <h3 className="text-lg font-serif text-white mb-2">No Responses Yet</h3>
               <p className="text-[#E8E4DD]/40 text-sm">
                 {filterStatus === "all"
-                  ? "Questionnaire responses will appear here once prospects submit them."
+                  ? "Historical responses appear here. New website requests are in Tely Clients."
                   : `No responses with "${filterStatus}" status.`}
               </p>
             </div>

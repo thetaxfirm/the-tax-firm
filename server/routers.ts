@@ -5,7 +5,6 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router, adminProcedure } from "./_core/trpc";
 import { z } from "zod";
 import {
-  createQuestionnaireResponse,
   getAllQuestionnaireResponses,
   getQuestionnaireResponseById,
   updateQuestionnaireResponseStatus,
@@ -30,7 +29,6 @@ import {
   deleteBlogArticle,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
-import { createGHLContact } from "./ghl";
 import { storagePut, storageGet } from "./storage";
 import { nanoid } from "nanoid";
 
@@ -49,84 +47,6 @@ export const appRouter = router({
   }),
 
   questionnaire: router({
-    submit: publicProcedure
-      .input(
-        z.object({
-          name: z.string().min(1),
-          email: z.string().email(),
-          phone: z.string().min(1),
-          selfEmployed: z.boolean(),
-          w2Employee: z.boolean(),
-          annualIncome: z.string().min(1),
-          ownsRealEstate: z.boolean(),
-          rothConversionInterest: z.boolean(),
-          retirementSavings: z.string().min(1),
-          expectations: z.string().optional(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        const result = await createQuestionnaireResponse({
-          name: input.name,
-          email: input.email,
-          phone: input.phone,
-          selfEmployed: input.selfEmployed,
-          w2Employee: input.w2Employee,
-          annualIncome: input.annualIncome,
-          ownsRealEstate: input.ownsRealEstate,
-          rothConversionInterest: input.rothConversionInterest,
-          retirementSavings: input.retirementSavings,
-          expectations: input.expectations ?? null,
-        });
-
-        // Send notification to owner
-        try {
-          const details = [
-            `Name: ${input.name}`,
-            `Email: ${input.email}`,
-            `Phone: ${input.phone}`,
-            `Self-Employed: ${input.selfEmployed ? "Yes" : "No"}`,
-            `W-2 Employee: ${input.w2Employee ? "Yes" : "No"}`,
-            `Annual Income: ${input.annualIncome}`,
-            `Owns Real Estate: ${input.ownsRealEstate ? "Yes" : "No"}`,
-            `Roth Conversion Interest: ${input.rothConversionInterest ? "Yes" : "No"}`,
-            `Retirement Savings: ${input.retirementSavings}`,
-            input.expectations ? `Expectations: ${input.expectations}` : "",
-          ].filter(Boolean).join("\n");
-
-          await notifyOwner({
-            title: `New Discovery Call Request — ${input.name} — Income: ${input.annualIncome}`,
-            content: `A new prospect has completed the questionnaire and is booking a discovery call.\n\n${details}`,
-          });
-        } catch (err) {
-          console.warn("[Questionnaire] Failed to send owner notification:", err);
-        }
-
-        // Create contact in GoHighLevel CRM
-        try {
-          const ghlResult = await createGHLContact({
-            name: input.name,
-            email: input.email,
-            phone: input.phone,
-            selfEmployed: input.selfEmployed,
-            w2Employee: input.w2Employee,
-            annualIncome: input.annualIncome,
-            ownsRealEstate: input.ownsRealEstate,
-            rothConversionInterest: input.rothConversionInterest,
-            retirementSavings: input.retirementSavings,
-            expectations: input.expectations,
-          });
-          if (ghlResult.success) {
-            console.log(`[Questionnaire] GHL contact created: ${ghlResult.contactId}`);
-          } else {
-            console.warn(`[Questionnaire] GHL contact creation failed: ${ghlResult.error}`);
-          }
-        } catch (err) {
-          console.warn("[Questionnaire] Failed to create GHL contact:", err);
-        }
-
-        return result;
-      }),
-
     list: adminProcedure.query(async () => {
       return getAllQuestionnaireResponses();
     }),

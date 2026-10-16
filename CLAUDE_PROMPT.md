@@ -25,7 +25,7 @@ Use this document when working with Claude (or any AI assistant) to make updates
 | Auth            | Google OAuth 2.0             | HS256 session cookies, `protectedProcedure` for auth   |
 | Email           | Resend                       | Owner notifications via `server/_core/notification.ts` |
 | Package Manager | pnpm 10                      | Lockfile: `pnpm-lock.yaml`                             |
-| Testing         | Vitest                       | Tests in `server/*.test.ts`                            |
+| Testing         | Vitest                       | Server tests and hermetic native form UI tests         |
 
 ---
 
@@ -46,7 +46,7 @@ the-tax-firm/
 │       │   ├── TaxCalculator.tsx      # Interactive tax savings calculator
 │       │   ├── Testimonials.tsx       # Auto-rotating testimonial carousel
 │       │   ├── FAQ.tsx                # 8-question accordion
-│       │   ├── BookingQuestionnaire.tsx # 9-step modal questionnaire → Calendly embed
+│       │   ├── Questionnaire.tsx       # Questionnaire → acknowledged Tely capture → Calendly
 │       │   ├── Footer.tsx             # Footer with social links
 │       │   └── SEOHead.tsx            # Dynamic meta tags (title, description, OG, keywords)
 │       ├── pages/
@@ -75,7 +75,6 @@ the-tax-firm/
 │   ├── routers.ts                     # ALL tRPC procedures (questionnaire, portal, blog admin)
 │   ├── db.ts                          # Database query helpers (Drizzle)
 │   ├── blogApi.ts                     # REST API for external blog publishing
-│   ├── ghl.ts                         # GoHighLevel CRM integration
 │   └── storage.ts                     # S3 upload/download helpers
 ├── drizzle/
 │   └── schema.ts                      # Database tables (users, questionnaire_responses, engagements, documents, messages, blog_articles)
@@ -98,7 +97,7 @@ the-tax-firm/
 ### General Rules
 
 1. **TypeScript everywhere** — No `any` types. Use Zod for runtime validation.
-2. **tRPC for all API calls** — Never use raw fetch/axios from the frontend. Use `trpc.*.useQuery()` or `trpc.*.useMutation()`.
+2. **tRPC for local APIs** — Use `trpc.*` for local portal/blog operations. Website captures use the shared native Tely SDK and Portal-provided connections, never a local POST/mail/CRM fallback or custom retry client.
 3. **Drizzle ORM for database** — All queries go through `server/db.ts` helpers. Never write raw SQL in route handlers.
 4. **S3 for file storage** — Never store file bytes in the database. Use `storagePut()` and save the URL/key in DB.
 5. **Environment variables** — Access via `server/_core/env.ts`. Never hardcode secrets.
@@ -120,7 +119,7 @@ the-tax-firm/
 - Use `adminProcedure` for admin-only endpoints
 - Validate all inputs with Zod schemas
 - Return typed responses (Drizzle rows are auto-typed)
-- Use `notifyOwner()` for important events (new submissions, uploads)
+- Local blog notifications use `notifyOwner()`; Tely owns notifications for native website requests. Do not duplicate them locally.
 
 ### Database Standards
 
@@ -132,10 +131,10 @@ the-tax-firm/
 
 ### Testing Standards
 
-- Test files: `server/*.test.ts`
+- Test files: `server/*.test.ts` and `client/**/*.test.tsx`
 - Use Vitest with `describe/it/expect`
-- Test against the live dev server (not mocks) for integration tests
-- Run `pnpm test` before committing
+- Prove behavior at its owner boundary without real provider calls or writes. Native form tests use Happy DOM and real React components; the shared SDK owns transport/replay proof.
+- Run affected tests and `pnpm check` before committing; run the full suite in CI
 - All tests must pass before deployment
 
 ---
@@ -186,7 +185,7 @@ curl -X POST https://thetaxfirm.us/api/blog/articles \
 
 | Service               | Purpose                                        | Config                                                                                  |
 | --------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------- |
-| GoHighLevel           | CRM — auto-creates contacts from questionnaire | `GHL_API_KEY`, `GHL_LOCATION_ID`                                                        |
+| Tely native forms     | Questionnaire and tax updates requests → Clients | Public build-time `VITE_TELY_*` connections in `ENV_TEMPLATE.md`                      |
 | Calendly              | Appointment scheduling (embedded)              | Hardcoded URL: `https://calendly.com/chriscraig702`                                     |
 | Tely.ai               | Automated blog publishing                      | Uses `BLOG_API_KEY` via REST API                                                        |
 | Google Drive          | Blog content sync                              | `DRIVE_FOLDER_ID`, `GOOGLE_API_KEY`                                                     |
@@ -245,9 +244,9 @@ migrations, serves `dist/public`, and binds `0.0.0.0:$PORT`. Runbook:
 2. **Never store images locally** — Upload to S3/CDN and use the returned URL
 3. **The `server/_core/` directory is framework code** — Avoid editing unless extending infrastructure
 4. **Static blog articles** in `blogPosts.ts` are merged with database articles on the frontend
-5. **All booking CTAs** trigger the questionnaire modal, which shows Calendly after completion
+5. **Booking CTAs** trigger the questionnaire modal. Keep all answers (including No); show Calendly only after `tely-cta:requested`, never after submit/error/unconfirmed. Closing/reopening must preserve the pending form identity. Capture is not a confirmed appointment.
 6. **Admin access** requires `role: "admin"` in the users table
-7. **The site is live at thetaxfirm.us** — Test changes locally before pushing
+7. **Source preparation is not a live cutover** — Keep changes in a draft feature PR until explicitly authorized; no site deploy, production test leads, customer messages, publication/export or phone activation. Historical local responses and portal data remain intact; new updates requests are not mailing-list membership.
 
 ---
 
