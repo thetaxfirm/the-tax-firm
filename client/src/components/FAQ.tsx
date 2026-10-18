@@ -13,7 +13,7 @@ export default function FAQ() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="faq" className="relative py-24 sm:py-32 section-dark" ref={ref}>
+    <section id="faq" className="relative py-24 sm:py-32 section-dark overflow-hidden" ref={ref}>
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#D4A853]/3 rounded-full blur-[200px]" />
 
       <div className="relative container">
