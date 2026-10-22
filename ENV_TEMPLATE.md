@@ -29,11 +29,18 @@ development. Missing connections leave forms unavailable, not locally stored.
 | `VITE_TELY_QUESTIONNAIRE_SUBMISSIONS_URL` | Questionnaire submissions URL |
 | `VITE_TELY_NEWSLETTER_CONTEXT_URL` | Tax updates request context URL |
 | `VITE_TELY_NEWSLETTER_SUBMISSIONS_URL` | Tax updates request submissions URL |
+| `VITE_TELY_SALES_SCRIPT_TAG` | Complete public Sales tag issued by the business's Tely Portal |
+| `VITE_TELY_ANALYTICS_SCRIPT_TAG` | Complete public Analytics tag issued by the same business's Tely Portal |
 
 Tely Clients owns new requests, visitor identity and notification policy.
 Keep customer notifications off during preparation. The updates form records
 an updates request, not a mailing-list subscription. Calendly still owns actual
 booking and opens only after the questionnaire capture is acknowledged.
+Sales and Analytics load independently on public routes. Analytics excludes
+`/portal` and `/admin` before history changes can emit a pageview. Both embeds
+are disposed on private-route entry and remounted on return to the public site.
+This requires the shared Analytics embed lifecycle contract; site preparation
+does not install variables, rebuild or deploy the working site.
 
 ## Object storage (portal document + blog image uploads)
 
