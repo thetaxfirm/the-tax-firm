@@ -96,14 +96,14 @@ DATABASE_URL          = <from Railway MySQL plugin>
 JWT_SECRET            = <generated — see handoff message>
 BLOG_API_KEY          = <generated — see handoff message>
 
+# GoHighLevel CRM (questionnaire contacts, synced after Tely acknowledges)
+GHL_API_KEY           = <your GHL token>
+GHL_LOCATION_ID       = hf2fpQyPswcNJOmnqRFR
+
 # Google sign-in  (Client ID goes in BOTH of these)
 GOOGLE_CLIENT_ID      = <from Step 1>
 GOOGLE_CLIENT_SECRET  = <from Step 1>
 ADMIN_EMAILS          = chris@thetaxfirm.us
-
-# GoHighLevel CRM
-GHL_API_KEY           = <your GHL token>
-GHL_LOCATION_ID       = hf2fpQyPswcNJOmnqRFR
 
 # Object storage (Step 2)
 S3_BUCKET             = thetaxfirm-uploads
@@ -120,13 +120,11 @@ NOTIFY_EMAIL_FROM     = The Tax Firm <notify@thetaxfirm.us>
 OWNER_EMAIL           = chris@thetaxfirm.us
 ```
 
-That is the complete set. The client bundle reads no environment variables, so
-there is nothing to configure for branding or analytics and nothing that must be
-present before the build.
-
-> No variable here is needed at build time — the client bundle contains none of
-> them. Adding or changing one takes effect on the next restart; no rebuild is
-> required.
+Server variables above take effect on restart. Also supply the public
+`VITE_TELY_*` connections listed in `ENV_TEMPLATE.md` as Docker build arguments
+before building the web image. A connection change requires a rebuild.
+Never pass server secrets as public Vite values. The native forms remain
+disabled if their configuration or SDK is unavailable.
 
 ---
 
@@ -180,7 +178,12 @@ the cutover in Step 6, then again on `thetaxfirm.us` afterwards.
 
 - [ ] Deploy Logs show `[Migrate] Database schema is up to date` (Step 5)
 - [ ] Home, service pages, blog render
-- [ ] Questionnaire submits → row in DB **and** a contact appears in GoHighLevel
+- [ ] In an authorized test environment, questionnaire capture is acknowledged
+      in Tely Clients before Calendly opens; every answer, including No, is retained
+- [ ] The same questionnaire creates a contact in GoHighLevel (`[GHL]` logs)
+- [ ] Tax updates form acknowledges a request in Tely Clients, not a subscription
+- [ ] Customer email, publication/export and phone stay off during preparation;
+      do not submit production test leads or switch the live site without authorization
 - [ ] "Sign in" → Google → returns logged in; your account shows as **admin**
 - [ ] Client portal: upload a document → downloads back (storage works)
 - [ ] `/api/blog/articles` returns **JSON** (not HTML) — the production API is

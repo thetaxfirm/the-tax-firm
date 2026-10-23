@@ -1,25 +1,24 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { ArrowRight, Mail, Phone, MapPin } from "lucide-react";
-import { toast } from "sonner";
 import { useQuestionnaire } from "@/contexts/QuestionnaireContext";
+import { telyFormConnection, useTelyForm } from "@/lib/tely-forms";
 
 export default function Contact() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [email, setEmail] = useState("");
+  const [requested, setRequested] = useState(false);
+  const connection = telyFormConnection("newsletter");
+  const native = useTelyForm(() => setRequested(true));
   const { openQuestionnaire } = useQuestionnaire();
 
-  const handleNewsletter = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      toast.success("Thank you for subscribing! We'll be in touch.");
-      setEmail("");
-    }
-  };
-
   return (
-    <section id="contact" className="relative py-24 sm:py-32 section-dark overflow-hidden" ref={ref}>
+    <section
+      id="contact"
+      className="relative py-24 sm:py-32 section-dark overflow-hidden"
+      ref={ref}
+    >
       {/* Glow effects */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#D4A853]/3 rounded-full blur-[250px]" />
 
@@ -43,14 +42,18 @@ export default function Contact() {
             <span className="text-[#D4A853]">the IRS?</span>
           </h2>
           <p className="text-lg text-[#E8E4DD]/60 max-w-2xl mx-auto mb-10">
-            Schedule your free discovery call today and find out how much you could be saving with a proactive tax strategy.
+            Schedule your free discovery call today and find out how much you
+            could be saving with a proactive tax strategy.
           </p>
           <button
             onClick={openQuestionnaire}
             className="group inline-flex items-center gap-3 px-10 py-5 bg-[#D4A853] text-[#0B1120] font-semibold text-lg rounded-sm hover:bg-[#F0D68A] transition-all duration-300 shadow-lg shadow-[#D4A853]/20"
           >
             Schedule a Free Discovery Call
-            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            <ArrowRight
+              size={20}
+              className="group-hover:translate-x-1 transition-transform"
+            />
           </button>
         </motion.div>
 
@@ -65,26 +68,49 @@ export default function Contact() {
           <div className="glass-card rounded-sm p-8">
             <div className="flex items-center gap-3 mb-4">
               <Mail size={20} className="text-[#D4A853]" />
-              <h3 className="font-serif text-xl text-white">Stay in the Loop</h3>
+              <h3 className="font-serif text-xl text-white">
+                Stay in the Loop
+              </h3>
             </div>
             <p className="text-sm text-[#E8E4DD]/50 mb-6">
-              Get exclusive tax tips, strategy insights, and updates delivered to your inbox.
+              Request tax tips, strategy insights, and updates from our team.
             </p>
-            <form onSubmit={handleNewsletter} className="space-y-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm px-4 py-3 text-white placeholder:text-[#E8E4DD]/30 focus:border-[#D4A853]/50 focus:outline-none transition-colors"
-                required
-              />
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#D4A853] text-[#0B1120] font-semibold rounded-sm hover:bg-[#F0D68A] transition-all duration-300 text-sm"
-              >
-                Subscribe to Newsletter
-              </button>
+            <form
+              ref={native.ref}
+              onSubmit={event => event.preventDefault()}
+              className="space-y-3"
+              data-tely-cta="native"
+              data-tely-context-url={connection.contextUrl}
+              data-tely-submissions-url={connection.submissionsUrl}
+            >
+              <fieldset disabled data-tely-pending className="space-y-3">
+                <input
+                  type="email"
+                  name="email"
+                  data-tely-field="email"
+                  disabled={requested}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm px-4 py-3 text-white placeholder:text-[#E8E4DD]/30 focus:border-[#D4A853]/50 focus:outline-none transition-colors"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={requested}
+                  className="w-full py-3 bg-[#D4A853] text-[#0B1120] font-semibold rounded-sm hover:bg-[#F0D68A] transition-all duration-300 text-sm"
+                >
+                  {requested ? "Request received" : "Request tax updates"}
+                </button>
+                <span data-tely-status="" role="status" aria-live="polite">
+                  {connection.contextUrl && connection.submissionsUrl
+                    ? ""
+                    : "Form unavailable. Please contact the team directly."}
+                </span>
+              </fieldset>
+              <noscript>
+                This form requires JavaScript. Please contact the team directly.
+              </noscript>
             </form>
           </div>
 
@@ -100,7 +126,9 @@ export default function Contact() {
                   <Phone size={18} className="text-[#D4A853]" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">Phone</div>
+                  <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">
+                    Phone
+                  </div>
                   <div className="text-sm">(702) 498-2144</div>
                 </div>
               </a>
@@ -112,7 +140,9 @@ export default function Contact() {
                   <Mail size={18} className="text-[#D4A853]" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">Email</div>
+                  <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">
+                    Email
+                  </div>
                   <div className="text-sm">chris@thetaxfirm.us</div>
                 </div>
               </a>
@@ -121,8 +151,12 @@ export default function Contact() {
                   <MapPin size={18} className="text-[#D4A853]" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">Service Area</div>
-                  <div className="text-sm">Nationwide — Virtual Consultations</div>
+                  <div className="text-xs text-[#E8E4DD]/40 uppercase tracking-wider">
+                    Service Area
+                  </div>
+                  <div className="text-sm">
+                    Nationwide — Virtual Consultations
+                  </div>
                 </div>
               </div>
             </div>

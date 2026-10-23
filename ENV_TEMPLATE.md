@@ -1,9 +1,9 @@
 # Environment Variables
 
 Set these in the Railway service's **Variables** tab (see `RAILWAY_DEPLOY.md`).
-Every variable is read by the server at runtime — nothing is baked into the
-client bundle — so a change takes effect on restart, with no rebuild. Never
-commit real values to git.
+Server secrets are read at runtime. Public `VITE_TELY_*` form connections are
+compiled into the client bundle and require a rebuild. Never put private keys
+in a `VITE_` variable or commit real credentials.
 
 ## Required
 
@@ -14,9 +14,35 @@ commit real values to git.
 | `GOOGLE_CLIENT_ID`      | Google OAuth 2.0 client ID (server-side)                      | `xxxx.apps.googleusercontent.com`                                        |
 | `GOOGLE_CLIENT_SECRET`  | Google OAuth 2.0 client secret                                | `GOCSPX-...`                                                             |
 | `ADMIN_EMAILS`          | Comma-separated emails granted the `admin` role on sign-in    | `chris@thetaxfirm.us`                                                    |
+| `BLOG_API_KEY`          | Bearer token protecting `/api/blog` write endpoints           | random string                                                            |
 | `GHL_API_KEY`           | GoHighLevel API key (JWT bearer token, no "Bearer " prefix)   | `eyJhbGci...`                                                            |
 | `GHL_LOCATION_ID`       | GoHighLevel location ID                                       | `hf2fpQyPswcNJOmnqRFR`                                                   |
-| `BLOG_API_KEY`          | Bearer token protecting `/api/blog` write endpoints           | random string                                                            |
+
+## Public Tely forms (build-time)
+
+Copy the native form connections from the business's Tely Portal. Supply them
+to the Docker build using the matching build arguments, or to Vite for local
+development. Missing connections leave forms unavailable, not locally stored.
+
+| Variable | Value |
+| --- | --- |
+| `VITE_TELY_EMBED_SCRIPT_URL` | Versioned native SDK URL |
+| `VITE_TELY_QUESTIONNAIRE_CONTEXT_URL` | Questionnaire context URL |
+| `VITE_TELY_QUESTIONNAIRE_SUBMISSIONS_URL` | Questionnaire submissions URL |
+| `VITE_TELY_NEWSLETTER_CONTEXT_URL` | Tax updates request context URL |
+| `VITE_TELY_NEWSLETTER_SUBMISSIONS_URL` | Tax updates request submissions URL |
+| `VITE_TELY_SALES_SCRIPT_TAG` | Complete public Sales tag issued by the business's Tely Portal |
+| `VITE_TELY_ANALYTICS_SCRIPT_TAG` | Complete public Analytics tag issued by the same business's Tely Portal |
+
+Tely Clients owns new requests, visitor identity and notification policy.
+Keep customer notifications off during preparation. The updates form records
+an updates request, not a mailing-list subscription. Calendly still owns actual
+booking and opens only after the questionnaire capture is acknowledged.
+Sales and Analytics load independently on public routes. Analytics excludes
+`/portal` and `/admin` before history changes can emit a pageview. Both embeds
+are disposed on private-route entry and remounted on return to the public site.
+This requires the shared Analytics embed lifecycle contract; site preparation
+does not install variables, rebuild or deploy the working site.
 
 ## Object storage (portal document + blog image uploads)
 
@@ -34,7 +60,7 @@ S3-compatible — works with Cloudflare R2, AWS S3, Backblaze B2, etc.
 
 ## Email notifications (optional but recommended)
 
-Owner alerts on new questionnaire submissions / blog posts, sent via [Resend](https://resend.com).
+Local blog owner alerts, sent via [Resend](https://resend.com).
 If unset, the underlying actions still succeed — the notification is simply skipped.
 
 | Variable            | Description                                                 | Example                               |
@@ -60,7 +86,7 @@ If unset, the underlying actions still succeed — the notification is simply sk
 - `OWNER_OPEN_ID` still works (it grants the `admin` role to one openId), but
   openIds are now `google:<sub>`, so a value carried over from Manus will never
   match. Prefer `ADMIN_EMAILS`.
-- The client reads **no** environment variables. Google sign-in starts at
+- Apart from the public Tely form connections, Google sign-in starts at
   `GET /api/oauth/login`, which the server builds, so `VITE_GOOGLE_CLIENT_ID` is
   no longer needed — only the server-side `GOOGLE_CLIENT_ID`. Earlier revisions
   of this file also listed `VITE_APP_TITLE`, `VITE_APP_LOGO`, `OWNER_NAME` and

@@ -15,6 +15,7 @@ import FractionalCFO from "./pages/FractionalCFO";
 import Bookkeeping from "./pages/Bookkeeping";
 import Portal from "./pages/Portal";
 import AdminPortal from "./pages/AdminPortal";
+import TelyWidgets from "./components/TelyWidgets";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -47,6 +48,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <TelyWidgets />
             <QuestionnaireModal />
           </TooltipProvider>
         </QuestionnaireProvider>

@@ -6,8 +6,9 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowRight, ArrowLeft, X, CheckCircle2 } from "lucide-react";
+import { telyFormConnection, useTelyForm } from "@/lib/tely-forms";
 import { trpc } from "@/lib/trpc";
 
 interface QuestionnaireProps {
@@ -80,9 +81,11 @@ const questions: QuestionConfig[] = [
   },
   {
     id: "expectations",
-    question: "If you were to hire my firm, what are your expectations and what would you want us to accomplish for you or your family?",
+    question:
+      "If you were to hire my firm, what are your expectations and what would you want us to accomplish for you or your family?",
     type: "textarea",
-    placeholder: "Tell us about your goals, expectations, and what you'd like us to help you achieve...",
+    placeholder:
+      "Tell us about your goals, expectations, and what you'd like us to help you achieve...",
   },
 ];
 
@@ -99,22 +102,43 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
   const totalSteps = questions.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
-  const submitMutation = trpc.questionnaire.submit.useMutation();
+  const connection = telyFormConnection("questionnaire");
+  const syncCrm = trpc.questionnaire.syncCrm.useMutation();
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
+  // After Tely acknowledges the request, mirror the contact into GoHighLevel.
+  const onRequested = useCallback(() => {
+    const a = answersRef.current;
+    syncCrm.mutate({
+      name: String(a["name"] || "").trim(),
+      email: String(a["email"] || "").trim(),
+      phone: String(a["phone"] || "").trim(),
+      selfEmployed: a["self_employed"] === true,
+      w2Employee: a["w2_employee"] === true,
+      annualIncome: String(a["annual_income"] || ""),
+      ownsRealEstate: a["own_real_estate"] === true,
+      rothConversionInterest: a["roth_conversion"] === true,
+      retirementSavings: String(a["pretax_retirement"] || ""),
+      expectations: a["expectations"] ? String(a["expectations"]) : undefined,
+    });
+    setCompleted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const native = useTelyForm(onRequested);
 
   // Initialize Calendly inline widget when completed
   useEffect(() => {
-    if (completed && calendlyContainerRef.current) {
+    if (completed && isOpen && calendlyContainerRef.current) {
       // Clear any previous widget
       calendlyContainerRef.current.innerHTML = "";
 
       // Small delay to ensure DOM is ready and Calendly script is loaded
       const timer = setTimeout(() => {
-        if (
-          calendlyContainerRef.current &&
-          (window as any).Calendly
-        ) {
+        if (calendlyContainerRef.current && (window as any).Calendly) {
           (window as any).Calendly.initInlineWidget({
-            url: CALENDLY_URL + "?hide_gdpr_banner=1&background_color=0b1120&text_color=e8e4dd&primary_color=d4a853",
+            url:
+              CALENDLY_URL +
+              "?hide_gdpr_banner=1&background_color=0b1120&text_color=e8e4dd&primary_color=d4a853",
             parentElement: calendlyContainerRef.current,
           });
         }
@@ -122,7 +146,7 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
 
       return () => clearTimeout(timer);
     }
-  }, [completed]);
+  }, [completed, isOpen]);
 
   const canProceed = () => {
     const answer = answers[current.id];
@@ -148,65 +172,44 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
     if (!canProceed()) return;
     if (currentStep < totalSteps - 1) {
       setDirection(1);
-      setCurrentStep((prev) => prev + 1);
+      setCurrentStep(prev => prev + 1);
     } else {
-      // Submit answers to the database
-      submitMutation.mutate({
-        name: String(answers["name"] || "").trim(),
-        email: String(answers["email"] || "").trim(),
-        phone: String(answers["phone"] || "").trim(),
-        selfEmployed: answers["self_employed"] === true,
-        w2Employee: answers["w2_employee"] === true,
-        annualIncome: String(answers["annual_income"] || ""),
-        ownsRealEstate: answers["own_real_estate"] === true,
-        rothConversionInterest: answers["roth_conversion"] === true,
-        retirementSavings: String(answers["pretax_retirement"] || ""),
-        expectations: answers["expectations"] ? String(answers["expectations"]) : undefined,
-      });
-      setCompleted(true);
+      native.form?.requestSubmit();
     }
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
       setDirection(-1);
-      setCurrentStep((prev) => prev - 1);
+      setCurrentStep(prev => prev - 1);
     }
   };
 
   const handleYesNo = (value: boolean) => {
-    setAnswers((prev) => ({ ...prev, [current.id]: value }));
+    setAnswers(prev => ({ ...prev, [current.id]: value }));
   };
 
   const handleTextChange = (value: string) => {
     const numericValue = value.replace(/[^0-9]/g, "");
     if (numericValue) {
       const formatted = Number(numericValue).toLocaleString("en-US");
-      setAnswers((prev) => ({ ...prev, [current.id]: formatted }));
+      setAnswers(prev => ({ ...prev, [current.id]: formatted }));
     } else {
-      setAnswers((prev) => ({ ...prev, [current.id]: "" }));
+      setAnswers(prev => ({ ...prev, [current.id]: "" }));
     }
   };
 
   const handleTextareaChange = (value: string) => {
-    setAnswers((prev) => ({ ...prev, [current.id]: value }));
+    setAnswers(prev => ({ ...prev, [current.id]: value }));
   };
 
-  const handleReset = () => {
-    setCurrentStep(0);
-    setAnswers({});
-    setDirection(1);
-    setCompleted(false);
-  };
-
-  const handleClose = () => {
-    handleReset();
-    onClose();
-  };
+  // Closing the modal must not discard an unresolved native operation.
+  const handleClose = () => onClose();
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Don't submit on Enter for textarea (allow newlines)
     if (e.key === "Enter" && current.type !== "textarea" && canProceed()) {
+      e.preventDefault();
       handleNext();
     }
   };
@@ -226,10 +229,11 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
     }),
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div
+      style={{ display: isOpen ? undefined : "none" }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+    >
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -246,14 +250,13 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.3 }}
         className={`relative bg-[#0B1120] border border-[#D4A853]/20 rounded-sm shadow-2xl shadow-black/40 overflow-hidden transition-all duration-500 ${
-          completed
-            ? "w-full max-w-3xl max-h-[90vh]"
-            : "w-full max-w-lg"
+          completed ? "w-full max-w-3xl max-h-[90vh]" : "w-full max-w-lg"
         }`}
         onKeyDown={handleKeyDown}
       >
         {/* Close button */}
         <button
+          type="button"
           onClick={handleClose}
           className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center text-[#E8E4DD]/40 hover:text-[#D4A853] transition-colors"
         >
@@ -273,159 +276,233 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
         )}
 
         {!completed ? (
-          <div className="p-8 sm:p-10">
-            {/* Header */}
-            <div className="mb-2">
-              <span className="text-[#D4A853] text-xs uppercase tracking-[0.3em] font-medium">
-                Question {currentStep + 1} of {totalSteps}
-              </span>
-            </div>
+          <form
+            ref={native.ref}
+            className="p-8 sm:p-10"
+            onSubmit={event => event.preventDefault()}
+            data-tely-cta="native"
+            data-tely-context-url={connection.contextUrl}
+            data-tely-submissions-url={connection.submissionsUrl}
+          >
+            <fieldset disabled data-tely-pending>
+              {questions.map(question => {
+                const keys: Record<string, string> = {
+                  self_employed: "selfEmployed",
+                  w2_employee: "w2Employee",
+                  annual_income: "annualIncome",
+                  own_real_estate: "ownsRealEstate",
+                  roth_conversion: "rothConversionInterest",
+                  pretax_retirement: "retirementSavings",
+                };
+                const value = answers[question.id];
+                return (
+                  <input
+                    key={question.id}
+                    type="hidden"
+                    name={question.id}
+                    data-tely-field={keys[question.id] || question.id}
+                    value={
+                      value === true
+                        ? "Yes"
+                        : value === false
+                          ? "No"
+                          : value || ""
+                    }
+                  />
+                );
+              })}
+              <input
+                type="text"
+                name="website"
+                data-tely-field="website"
+                hidden
+                tabIndex={-1}
+                autoComplete="off"
+              />
 
-            {/* Question area */}
-            <div className="min-h-[200px] flex flex-col justify-center">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={currentStep}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
+              {/* Header */}
+              <div className="mb-2">
+                <span className="text-[#D4A853] text-xs uppercase tracking-[0.3em] font-medium">
+                  Question {currentStep + 1} of {totalSteps}
+                </span>
+              </div>
+
+              {/* Question area */}
+              <div className="min-h-[200px] flex flex-col justify-center">
+                <AnimatePresence mode="wait" custom={direction}>
+                  <motion.div
+                    key={currentStep}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                  >
+                    <h3 className="font-serif text-2xl sm:text-3xl text-white leading-snug mb-8">
+                      {current.question}
+                    </h3>
+
+                    {current.type === "yesno" && (
+                      <div className="flex gap-4">
+                        <button
+                          type="button"
+                          onClick={() => handleYesNo(true)}
+                          className={`flex-1 py-4 rounded-sm text-base font-semibold transition-all duration-300 border ${
+                            answers[current.id] === true
+                              ? "bg-[#D4A853] text-[#0B1120] border-[#D4A853]"
+                              : "bg-transparent text-[#E8E4DD]/60 border-[#D4A853]/20 hover:border-[#D4A853]/50 hover:text-white"
+                          }`}
+                        >
+                          Yes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleYesNo(false)}
+                          className={`flex-1 py-4 rounded-sm text-base font-semibold transition-all duration-300 border ${
+                            answers[current.id] === false
+                              ? "bg-[#D4A853] text-[#0B1120] border-[#D4A853]"
+                              : "bg-transparent text-[#E8E4DD]/60 border-[#D4A853]/20 hover:border-[#D4A853]/50 hover:text-white"
+                          }`}
+                        >
+                          No
+                        </button>
+                      </div>
+                    )}
+
+                    {current.type === "name" && (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={String(answers[current.id] || "")}
+                          onChange={e =>
+                            setAnswers(prev => ({
+                              ...prev,
+                              [current.id]: e.target.value,
+                            }))
+                          }
+                          placeholder={current.placeholder}
+                          autoFocus
+                          className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
+                        />
+                      </div>
+                    )}
+
+                    {current.type === "email" && (
+                      <div className="relative">
+                        <input
+                          type="email"
+                          value={String(answers[current.id] || "")}
+                          onChange={e =>
+                            setAnswers(prev => ({
+                              ...prev,
+                              [current.id]: e.target.value,
+                            }))
+                          }
+                          placeholder={current.placeholder}
+                          autoFocus
+                          className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
+                        />
+                      </div>
+                    )}
+
+                    {current.type === "phone" && (
+                      <div className="relative">
+                        <input
+                          type="tel"
+                          value={String(answers[current.id] || "")}
+                          onChange={e =>
+                            setAnswers(prev => ({
+                              ...prev,
+                              [current.id]: e.target.value,
+                            }))
+                          }
+                          placeholder={current.placeholder}
+                          autoFocus
+                          className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
+                        />
+                      </div>
+                    )}
+
+                    {current.type === "text" && (
+                      <div className="relative">
+                        {current.prefix && (
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4A853] text-lg font-medium">
+                            {current.prefix}
+                          </span>
+                        )}
+                        <input
+                          type="text"
+                          value={String(answers[current.id] || "")}
+                          onChange={e => handleTextChange(e.target.value)}
+                          placeholder={current.placeholder}
+                          autoFocus
+                          className={`w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 pr-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20 ${
+                            current.prefix ? "pl-10" : "pl-4"
+                          }`}
+                        />
+                      </div>
+                    )}
+
+                    {current.type === "textarea" && (
+                      <div className="relative">
+                        <textarea
+                          value={String(answers[current.id] || "")}
+                          onChange={e => handleTextareaChange(e.target.value)}
+                          placeholder={current.placeholder}
+                          autoFocus
+                          rows={5}
+                          className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-base leading-relaxed focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20 resize-none"
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Navigation */}
+              <div className="flex items-center justify-between mt-6 pt-6 border-t border-[#D4A853]/10">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  disabled={currentStep === 0}
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                    currentStep === 0
+                      ? "text-[#E8E4DD]/20 cursor-not-allowed"
+                      : "text-[#E8E4DD]/60 hover:text-[#D4A853]"
+                  }`}
                 >
-                  <h3 className="font-serif text-2xl sm:text-3xl text-white leading-snug mb-8">
-                    {current.question}
-                  </h3>
+                  <ArrowLeft size={16} />
+                  Back
+                </button>
 
-                  {current.type === "yesno" && (
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => handleYesNo(true)}
-                        className={`flex-1 py-4 rounded-sm text-base font-semibold transition-all duration-300 border ${
-                          answers[current.id] === true
-                            ? "bg-[#D4A853] text-[#0B1120] border-[#D4A853]"
-                            : "bg-transparent text-[#E8E4DD]/60 border-[#D4A853]/20 hover:border-[#D4A853]/50 hover:text-white"
-                        }`}
-                      >
-                        Yes
-                      </button>
-                      <button
-                        onClick={() => handleYesNo(false)}
-                        className={`flex-1 py-4 rounded-sm text-base font-semibold transition-all duration-300 border ${
-                          answers[current.id] === false
-                            ? "bg-[#D4A853] text-[#0B1120] border-[#D4A853]"
-                            : "bg-transparent text-[#E8E4DD]/60 border-[#D4A853]/20 hover:border-[#D4A853]/50 hover:text-white"
-                        }`}
-                      >
-                        No
-                      </button>
-                    </div>
-                  )}
-
-                  {current.type === "name" && (
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={String(answers[current.id] || "")}
-                        onChange={(e) => setAnswers((prev) => ({ ...prev, [current.id]: e.target.value }))}
-                        placeholder={current.placeholder}
-                        autoFocus
-                        className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
-                      />
-                    </div>
-                  )}
-
-                  {current.type === "email" && (
-                    <div className="relative">
-                      <input
-                        type="email"
-                        value={String(answers[current.id] || "")}
-                        onChange={(e) => setAnswers((prev) => ({ ...prev, [current.id]: e.target.value }))}
-                        placeholder={current.placeholder}
-                        autoFocus
-                        className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
-                      />
-                    </div>
-                  )}
-
-                  {current.type === "phone" && (
-                    <div className="relative">
-                      <input
-                        type="tel"
-                        value={String(answers[current.id] || "")}
-                        onChange={(e) => setAnswers((prev) => ({ ...prev, [current.id]: e.target.value }))}
-                        placeholder={current.placeholder}
-                        autoFocus
-                        className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20"
-                      />
-                    </div>
-                  )}
-
-                  {current.type === "text" && (
-                    <div className="relative">
-                      {current.prefix && (
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4A853] text-lg font-medium">
-                          {current.prefix}
-                        </span>
-                      )}
-                      <input
-                        type="text"
-                        value={String(answers[current.id] || "")}
-                        onChange={(e) => handleTextChange(e.target.value)}
-                        placeholder={current.placeholder}
-                        autoFocus
-                        className={`w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 pr-4 text-white text-lg focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20 ${
-                          current.prefix ? "pl-10" : "pl-4"
-                        }`}
-                      />
-                    </div>
-                  )}
-
-                  {current.type === "textarea" && (
-                    <div className="relative">
-                      <textarea
-                        value={String(answers[current.id] || "")}
-                        onChange={(e) => handleTextareaChange(e.target.value)}
-                        placeholder={current.placeholder}
-                        autoFocus
-                        rows={5}
-                        className="w-full bg-[#0F1729] border border-[#D4A853]/20 rounded-sm py-4 px-4 text-white text-base leading-relaxed focus:border-[#D4A853]/50 focus:outline-none transition-colors placeholder:text-[#E8E4DD]/20 resize-none"
-                      />
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-6 pt-6 border-t border-[#D4A853]/10">
-              <button
-                onClick={handleBack}
-                disabled={currentStep === 0}
-                className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                  currentStep === 0
-                    ? "text-[#E8E4DD]/20 cursor-not-allowed"
-                    : "text-[#E8E4DD]/60 hover:text-[#D4A853]"
-                }`}
-              >
-                <ArrowLeft size={16} />
-                Back
-              </button>
-
-              <button
-                onClick={handleNext}
-                disabled={!canProceed()}
-                className={`flex items-center gap-2 px-6 py-3 rounded-sm text-sm font-semibold transition-all duration-300 ${
-                  canProceed()
-                    ? "bg-[#D4A853] text-[#0B1120] hover:bg-[#F0D68A]"
-                    : "bg-[#D4A853]/20 text-[#D4A853]/40 cursor-not-allowed"
-                }`}
-              >
-                {currentStep === totalSteps - 1 ? "Complete" : "Next"}
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
+                <button
+                  type={currentStep === totalSteps - 1 ? "submit" : "button"}
+                  onClick={event => {
+                    event.preventDefault();
+                    handleNext();
+                  }}
+                  disabled={!canProceed()}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm text-sm font-semibold transition-all duration-300 ${
+                    canProceed()
+                      ? "bg-[#D4A853] text-[#0B1120] hover:bg-[#F0D68A]"
+                      : "bg-[#D4A853]/20 text-[#D4A853]/40 cursor-not-allowed"
+                  }`}
+                >
+                  {currentStep === totalSteps - 1 ? "Complete" : "Next"}
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+              <span data-tely-status="" role="status" aria-live="polite">
+                {connection.contextUrl && connection.submissionsUrl
+                  ? ""
+                  : "Form unavailable. Please contact the team directly."}
+              </span>
+            </fieldset>
+            <noscript>
+              This form requires JavaScript. Please contact the team directly.
+            </noscript>
+          </form>
         ) : (
           /* Completion screen with inline Calendly */
           <motion.div
@@ -443,7 +520,8 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
                 You're All Set!
               </h3>
               <p className="text-[#E8E4DD]/50 text-sm max-w-md mx-auto">
-                Pick a time below that works for you and we'll discuss how to reduce your tax burden.
+                Pick a time below that works for you and we'll discuss how to
+                reduce your tax burden.
               </p>
             </div>
 
@@ -457,6 +535,7 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
             {/* Maybe later link */}
             <div className="text-center py-3 border-t border-[#D4A853]/10">
               <button
+                type="button"
                 onClick={handleClose}
                 className="text-xs text-[#E8E4DD]/30 hover:text-[#D4A853] transition-colors"
               >

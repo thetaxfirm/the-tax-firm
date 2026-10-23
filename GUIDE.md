@@ -94,8 +94,12 @@ Prevents re-publishing articles when Railway redeploys containers.
 | `JWT_SECRET`                                 | Cookie/session secret      |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID (server-only)     |
 | `GOOGLE_CLIENT_SECRET`                       | Google OAuth client secret |
-| `GHL_API_KEY`                                | GoHighLevel CRM API key    |
-| `GHL_LOCATION_ID`                            | GoHighLevel location ID    |
+
+Website questionnaire and tax updates requests use native Tely capture, not
+the local questionnaire database or GoHighLevel. Configure the public
+build-time connections in `ENV_TEMPLATE.md` and rebuild. Historical responses
+remain available in the local admin; new requests are in Tely Clients.
+Calendly continues to manage actual appointments after capture acknowledgement.
 
 ### For the sync service (Railway)
 
