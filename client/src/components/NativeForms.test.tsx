@@ -28,6 +28,13 @@ vi.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: React.PropsWithChildren) => children,
 }));
 
+const syncCrm = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/trpc", () => ({
+  trpc: {
+    questionnaire: { syncCrm: { useMutation: () => ({ mutate: syncCrm }) } },
+  },
+}));
+
 let root: Root;
 let host: HTMLDivElement;
 beforeEach(() => {
@@ -202,6 +209,7 @@ it("retains every answer and opens booking only after the native capture acknowl
     form!.dispatchEvent(new CustomEvent("tely-cta:error", { bubbles: true }))
   );
   expect(host.textContent).not.toContain("Pick a time below");
+  expect(syncCrm, "GoHighLevel sync waits for Tely acknowledgement").not.toHaveBeenCalled();
   await act(async () =>
     form!.dispatchEvent(
       new CustomEvent("tely-cta:requested", {
@@ -211,4 +219,17 @@ it("retains every answer and opens booking only after the native capture acknowl
     )
   );
   expect(host.textContent).toContain("Pick a time below");
+  expect(syncCrm).toHaveBeenCalledTimes(1);
+  expect(syncCrm).toHaveBeenCalledWith({
+    name: "Jane Smith",
+    email: "jane@example.org",
+    phone: "(702) 555-0123",
+    selfEmployed: false,
+    w2Employee: true,
+    annualIncome: "250,000",
+    ownsRealEstate: false,
+    rothConversionInterest: true,
+    retirementSavings: "500,000",
+    expectations: "Plan retirement and tax strategy",
+  });
 });

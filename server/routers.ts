@@ -29,6 +29,7 @@ import {
   deleteBlogArticle,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+import { createGHLContact } from "./ghl";
 import { storagePut, storageGet } from "./storage";
 import { nanoid } from "nanoid";
 
@@ -47,6 +48,32 @@ export const appRouter = router({
   }),
 
   questionnaire: router({
+    // Tely Clients owns the inquiry record and the owner email. This only
+    // keeps the firm's GoHighLevel contact sync, which Tely cannot do; the
+    // client calls it after Tely acknowledges the same questionnaire.
+    syncCrm: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(1),
+          email: z.string().email(),
+          phone: z.string().min(1),
+          selfEmployed: z.boolean(),
+          w2Employee: z.boolean(),
+          annualIncome: z.string().min(1),
+          ownsRealEstate: z.boolean(),
+          rothConversionInterest: z.boolean(),
+          retirementSavings: z.string().min(1),
+          expectations: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const result = await createGHLContact(input);
+        if (!result.success) {
+          console.warn(`[Questionnaire] GHL contact creation failed: ${result.error}`);
+        }
+        return { success: result.success };
+      }),
+
     list: adminProcedure.query(async () => {
       return getAllQuestionnaireResponses();
     }),

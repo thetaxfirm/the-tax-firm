@@ -15,6 +15,8 @@ in a `VITE_` variable or commit real credentials.
 | `GOOGLE_CLIENT_SECRET`  | Google OAuth 2.0 client secret                                | `GOCSPX-...`                                                             |
 | `ADMIN_EMAILS`          | Comma-separated emails granted the `admin` role on sign-in    | `chris@thetaxfirm.us`                                                    |
 | `BLOG_API_KEY`          | Bearer token protecting `/api/blog` write endpoints           | random string                                                            |
+| `GHL_API_KEY`           | GoHighLevel API key (JWT bearer token, no "Bearer " prefix)   | `eyJhbGci...`                                                            |
+| `GHL_LOCATION_ID`       | GoHighLevel location ID                                       | `hf2fpQyPswcNJOmnqRFR`                                                   |
 
 ## Public Tely forms (build-time)
 

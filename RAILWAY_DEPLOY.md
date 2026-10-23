@@ -96,6 +96,10 @@ DATABASE_URL          = <from Railway MySQL plugin>
 JWT_SECRET            = <generated — see handoff message>
 BLOG_API_KEY          = <generated — see handoff message>
 
+# GoHighLevel CRM (questionnaire contacts, synced after Tely acknowledges)
+GHL_API_KEY           = <your GHL token>
+GHL_LOCATION_ID       = hf2fpQyPswcNJOmnqRFR
+
 # Google sign-in  (Client ID goes in BOTH of these)
 GOOGLE_CLIENT_ID      = <from Step 1>
 GOOGLE_CLIENT_SECRET  = <from Step 1>
@@ -176,6 +180,7 @@ the cutover in Step 6, then again on `thetaxfirm.us` afterwards.
 - [ ] Home, service pages, blog render
 - [ ] In an authorized test environment, questionnaire capture is acknowledged
       in Tely Clients before Calendly opens; every answer, including No, is retained
+- [ ] The same questionnaire creates a contact in GoHighLevel (`[GHL]` logs)
 - [ ] Tax updates form acknowledges a request in Tely Clients, not a subscription
 - [ ] Customer email, publication/export and phone stay off during preparation;
       do not submit production test leads or switch the live site without authorization

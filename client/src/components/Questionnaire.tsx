@@ -6,9 +6,10 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowRight, ArrowLeft, X, CheckCircle2 } from "lucide-react";
 import { telyFormConnection, useTelyForm } from "@/lib/tely-forms";
+import { trpc } from "@/lib/trpc";
 
 interface QuestionnaireProps {
   isOpen: boolean;
@@ -102,7 +103,28 @@ export default function Questionnaire({ isOpen, onClose }: QuestionnaireProps) {
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const connection = telyFormConnection("questionnaire");
-  const native = useTelyForm(() => setCompleted(true));
+  const syncCrm = trpc.questionnaire.syncCrm.useMutation();
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
+  // After Tely acknowledges the request, mirror the contact into GoHighLevel.
+  const onRequested = useCallback(() => {
+    const a = answersRef.current;
+    syncCrm.mutate({
+      name: String(a["name"] || "").trim(),
+      email: String(a["email"] || "").trim(),
+      phone: String(a["phone"] || "").trim(),
+      selfEmployed: a["self_employed"] === true,
+      w2Employee: a["w2_employee"] === true,
+      annualIncome: String(a["annual_income"] || ""),
+      ownsRealEstate: a["own_real_estate"] === true,
+      rothConversionInterest: a["roth_conversion"] === true,
+      retirementSavings: String(a["pretax_retirement"] || ""),
+      expectations: a["expectations"] ? String(a["expectations"]) : undefined,
+    });
+    setCompleted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const native = useTelyForm(onRequested);
 
   // Initialize Calendly inline widget when completed
   useEffect(() => {
