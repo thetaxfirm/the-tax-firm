@@ -72,6 +72,7 @@ export default function Footer() {
                 { label: "Client Portal", href: "/portal" },
                 { label: "FAQ", href: "#faq" },
                 { label: "Contact", href: "#contact" },
+                { label: "Medical Device Tax Deductions", href: "https://mddeductions.com/" },
               ].map((item) => (
                 <li key={item.label}>
                   <a href={item.href} className="text-sm text-[#E8E4DD]/40 hover:text-[#D4A853] transition-colors">
